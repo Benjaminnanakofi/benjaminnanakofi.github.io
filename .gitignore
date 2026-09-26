@@ -1,0 +1,7 @@
+# Local-only files: not part of the published website
+.claude/
+.vscode/
+phone-preview.html
+laptop-preview.html
+Portfolio-OLD-backup.html
+desktop.ini
