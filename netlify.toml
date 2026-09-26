@@ -1,0 +1,21 @@
+# Netlify settings for benjaminnanakofi's portfolio.
+# Plain HTML site: no build step, publish the repo root as-is.
+[build]
+  publish = "."
+
+# Security headers applied to every page
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Only allow code, styles and fonts from this site, cdnjs (GSAP / Three.js) and Google Fonts
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+    # Don't let other sites embed this page in a frame (stops clickjacking)
+    X-Frame-Options = "DENY"
+    # Browsers must respect declared file types
+    X-Content-Type-Options = "nosniff"
+    # Send only the site name (not full URLs) when visitors click outbound links
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # The site never needs camera, microphone, location or payments
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    # Always use HTTPS for a year
+    Strict-Transport-Security = "max-age=31536000"
