@@ -952,16 +952,18 @@
           <div class="dev-bar"><i></i></div>
         </div>
         <div class="spotlight-actions">
-          <a href="mailto:benjaminar4015@gmail.com?subject=Notify%20me%20when%20PALSKY%20launches" class="btn btn-primary"
+          <a href="mailto:palskystudios@gmail.com?subject=Notify%20me%20when%20PALSKY%20launches" class="btn btn-primary"
+             data-mail-to="palskystudios@gmail.com"
              data-mail-title="Get notified about PALSKY 🔔"
-             data-mail-intro="Send me a quick message and I’ll let you know the moment PALSKY launches."
+             data-mail-intro="Send us a quick message and we’ll let you know the moment PALSKY launches."
              data-mail-subject="Notify me when PALSKY launches"
-             data-mail-body="Hi Benjamin, please let me know when PALSKY launches!">🔔 Get notified</a>
-          <a href="mailto:benjaminar4015@gmail.com?subject=Partnering%20with%20PALSKY" class="btn btn-ghost"
+             data-mail-body="Hi PALSKY team, please let me know when PALSKY launches!">🔔 Get notified</a>
+          <a href="mailto:palskystudios@gmail.com?subject=Partnering%20with%20PALSKY" class="btn btn-ghost"
+             data-mail-to="palskystudios@gmail.com"
              data-mail-title="Partner with PALSKY 🤝"
              data-mail-intro="Planning a brand launch, concert or celebration? Let’s talk about a drone show together."
              data-mail-subject="Partnering with PALSKY"
-             data-mail-body="Hi Benjamin, I’m interested in partnering with PALSKY.">🤝 Partner with PALSKY</a>
+             data-mail-body="Hi PALSKY team, I’m interested in partnering with PALSKY.">🤝 Partner with PALSKY</a>
           <a href="https://www.instagram.com/palskystudios/" target="_blank" rel="noopener" class="btn btn-ghost btn-insta">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"/></svg>
             Follow @palskystudios</a>
@@ -1091,7 +1093,7 @@
           <span><span id="copyLabel">Copy email address</span><small>Paste it into any email service</small></span>
         </button>
       </div>
-      <p class="mail-address">benjaminar4015@gmail.com</p>
+      <p class="mail-address" id="mailAddress">benjaminar4015@gmail.com</p>
     </div>
   </div>
 
@@ -1151,20 +1153,24 @@
     // ===== Message sheet: Gmail / email app / copy =====
     // mailto: links alone do nothing on devices without an email app, so offer several ways to reach out.
     (function initMailSheet() {
-      const EMAIL = 'benjaminar4015@gmail.com';
+      // Personal address by default; buttons can override it with data-mail-to (PALSKY buttons use the company inbox)
+      const DEFAULT_EMAIL = 'benjaminar4015@gmail.com';
+      let email = DEFAULT_EMAIL;
       const sheet = document.getElementById('mailSheet');
       const copyBtn = document.getElementById('optCopy');
       const copyLabel = document.getElementById('copyLabel');
       let opener = null;
 
       function open(trigger) {
-        const { mailTitle, mailIntro, mailSubject = '', mailBody = '' } = trigger.dataset;
+        const { mailTo, mailTitle, mailIntro, mailSubject = '', mailBody = '' } = trigger.dataset;
+        email = mailTo || DEFAULT_EMAIL;
         const subject = encodeURIComponent(mailSubject);
         const body = encodeURIComponent(mailBody);
         document.getElementById('mailTitle').textContent = mailTitle || 'Get in touch';
         document.getElementById('mailIntro').textContent = mailIntro || '';
-        document.getElementById('optGmail').href = `https://mail.google.com/mail/?view=cm&fs=1&to=${EMAIL}&su=${subject}&body=${body}`;
-        document.getElementById('optMailto').href = `mailto:${EMAIL}?subject=${subject}&body=${body}`;
+        document.getElementById('mailAddress').textContent = email;
+        document.getElementById('optGmail').href = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
+        document.getElementById('optMailto').href = `mailto:${email}?subject=${subject}&body=${body}`;
         copyLabel.textContent = 'Copy email address';
         copyBtn.classList.remove('copied');
 
@@ -1196,12 +1202,12 @@
       copyBtn.addEventListener('click', async () => {
         let ok = false;
         try {
-          await navigator.clipboard.writeText(EMAIL);
+          await navigator.clipboard.writeText(email);
           ok = true;
         } catch (err) {
           // Fallback for browsers/previews that block the clipboard API
           const temp = document.createElement('textarea');
-          temp.value = EMAIL;
+          temp.value = email;
           temp.style.position = 'fixed';
           temp.style.opacity = '0';
           document.body.appendChild(temp);
@@ -1209,7 +1215,7 @@
           try { ok = document.execCommand('copy'); } catch (e) {}
           temp.remove();
         }
-        copyLabel.textContent = ok ? 'Copied! ✓' : EMAIL;
+        copyLabel.textContent = ok ? 'Copied! ✓' : email;
         copyBtn.classList.toggle('copied', ok);
       });
     })();
