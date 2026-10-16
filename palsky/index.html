@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>PALSKY — Culture, told in light</title>
+  <meta name="description" content="PALSKY designs drone light shows that tell the story of a culture — of people, organizations and industries — across the night sky. Homegrown in Accra, Ghana." />
+  <meta property="og:title" content="PALSKY — Culture, told in light" />
+  <meta property="og:description" content="Drone light shows that tell the story of a culture across the night sky. Homegrown in Accra." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#03040c" />
+  <meta name="color-scheme" content="dark" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%2303040c'/><circle cx='30' cy='34' r='5' fill='%23fff'/><circle cx='50' cy='26' r='5' fill='%235ab8f0'/><circle cx='70' cy='34' r='5' fill='%23fff'/><circle cx='50' cy='50' r='6' fill='%23ff8a3d'/><path d='M14 80h72' stroke='%23ff8a3d' stroke-width='5' stroke-linecap='round'/></svg>" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Syncopate:wght@400;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Brand: the night, the sky blue, the horizon orange (sunset / sunrise) and white */
+    :root {
+      --night: #03040c;
+      --night-2: #0a1430;
+      --sky: #5ab8f0;
+      --horizon: #ff8a3d;
+      --gold: #ffc46e;
+      --white: #ffffff;
+      --muted: rgba(255, 255, 255, 0.74);
+      --faint: rgba(255, 255, 255, 0.5);
+      --line: rgba(255, 255, 255, 0.14);
+      --glass: rgba(6, 10, 26, 0.55);
+      color-scheme: dark;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--night);
+      color: var(--white);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    :focus-visible { outline: 2px solid var(--horizon); outline-offset: 4px; border-radius: 6px; }
+
+    /* The sky: one canvas behind the whole story */
+    #sky { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+
+    main { position: relative; z-index: 1; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+    /* ===== Top bar ===== */
+    .bar {
+      position: fixed; inset: 0 0 auto 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.1rem 2rem;
+      background: linear-gradient(180deg, rgba(3, 4, 12, 0.75), transparent);
+    }
+    .brand { font-family: 'Syncopate', sans-serif; font-weight: 700; letter-spacing: 0.32em; font-size: 0.95rem; }
+    .brand i { font-style: normal; color: var(--horizon); }
+    .bar-actions { display: flex; align-items: center; gap: 1.25rem; }
+    .bar-link { font-size: 0.85rem; color: var(--muted); transition: color 0.2s; }
+    .bar-link:hover { color: var(--white); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
+      padding: 0.85rem 1.6rem;
+      border-radius: 999px;
+      font: 600 0.95rem/1 'Inter', sans-serif;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    }
+    .btn-sun { background: var(--horizon); color: #1a0d03; box-shadow: 0 10px 34px -10px rgba(255, 138, 61, 0.9); }
+    .btn-sun:hover { transform: translateY(-2px); background: #ff9d58; box-shadow: 0 16px 40px -12px rgba(255, 138, 61, 1); }
+    .btn-glass { color: var(--white); background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.28); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .btn-glass:hover { transform: translateY(-2px); border-color: var(--sky); }
+    .btn-sm { padding: 0.6rem 1.15rem; font-size: 0.85rem; }
+
+    /* ===== Chapter rail (desktop) ===== */
+    .rail {
+      position: fixed; right: 1.6rem; top: 50%; transform: translateY(-50%); z-index: 10;
+      display: flex; flex-direction: column; gap: 0.95rem; list-style: none;
+    }
+    .rail a { display: flex; align-items: center; justify-content: flex-end; gap: 0.7rem; color: var(--faint); font-size: 0.7rem; letter-spacing: 0.18em; text-transform: uppercase; }
+    .rail a span { opacity: 0; transform: translateX(6px); transition: opacity 0.3s, transform 0.3s; }
+    .rail a::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, 0.35); transition: all 0.35s ease; }
+    .rail a:hover span, .rail a.on span { opacity: 1; transform: none; }
+    .rail a.on { color: var(--white); }
+    .rail a.on::after { background: var(--horizon); box-shadow: 0 0 0 4px rgba(255, 138, 61, 0.22), 0 0 14px var(--horizon); }
+
+    /* ===== Live formation label ===== */
+    .live {
+      position: fixed; left: 2rem; bottom: 1.5rem; z-index: 10;
+      display: inline-flex; align-items: center; gap: 0.55rem;
+      font-family: 'Syncopate', sans-serif; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.45rem 0.85rem;
+      border-radius: 999px;
+      background: rgba(3, 4, 12, 0.5);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    }
+    .live .rec { width: 7px; height: 7px; border-radius: 50%; background: var(--horizon); box-shadow: 0 0 10px var(--horizon); animation: rec 1.4s ease-in-out infinite; }
+    .live b { color: var(--white); font-weight: 700; }
+    @keyframes rec { 50% { opacity: 0.25; } }
+
+    /* ===== Chapters ===== */
+    .chapter {
+      position: relative;
+      min-height: 100vh; min-height: 100svh;
+      display: flex; align-items: center;
+      padding: 7rem 0;
+    }
+    .copy { max-width: 520px; }
+    .chapter[data-side="right"] .copy { margin-left: auto; }
+    .chapter[data-side="center"] .copy { margin: 0 auto; text-align: center; max-width: 720px; }
+
+    .num {
+      display: inline-flex; align-items: center; gap: 0.8rem;
+      font-family: 'Syncopate', sans-serif; font-size: 0.68rem; letter-spacing: 0.26em; text-transform: uppercase;
+      color: var(--sky);
+      margin-bottom: 1.4rem;
+    }
+    .num::before { content: ''; width: 34px; height: 1px; background: currentColor; }
+    .chapter[data-side="center"] .num::after { content: ''; width: 34px; height: 1px; background: currentColor; }
+
+    h1, h2 { font-family: 'Instrument Serif', Georgia, serif; font-weight: 400; letter-spacing: -0.01em; }
+    h2 { font-size: clamp(2.5rem, 5.8vw, 4.6rem); line-height: 1.02; margin-bottom: 1.4rem; text-shadow: 0 2px 30px rgba(3, 4, 12, 0.8); }
+    h2 em { color: var(--horizon); }
+    h2 .sky { color: var(--sky); font-style: italic; }
+    .copy p { color: var(--muted); font-size: 1.08rem; margin-bottom: 1rem; text-shadow: 0 1px 14px rgba(3, 4, 12, 0.9); }
+    .copy p strong { color: var(--white); font-weight: 600; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.6rem; }
+    .tags span { font-size: 0.82rem; font-weight: 500; padding: 0.38rem 0.9rem; border-radius: 999px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+    .chapter[data-side="center"] .tags { justify-content: center; }
+
+    .proverb { margin-top: 1.6rem; padding-left: 1.1rem; border-left: 2px solid var(--horizon); font-family: 'Instrument Serif', serif; font-style: italic; font-size: 1.35rem; line-height: 1.35; color: var(--white); }
+    .proverb small { display: block; margin-top: 0.35rem; font-family: 'Inter', sans-serif; font-style: normal; font-size: 0.78rem; letter-spacing: 0.06em; color: var(--faint); }
+
+    /* ===== Hero ===== */
+    .hero { align-items: flex-end; padding-bottom: 12vh; }
+    .hero .copy { max-width: 760px; }
+    .kicker { font-family: 'Syncopate', sans-serif; font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.1rem; }
+    .hero h1 { font-size: clamp(2.3rem, 5.4vw, 4.4rem); line-height: 1.04; margin-bottom: 1.2rem; text-shadow: 0 2px 30px rgba(3, 4, 12, 0.9); }
+    .hero h1 em { color: var(--horizon); }
+    .hero p.lead { color: var(--muted); font-size: 1.12rem; max-width: 560px; margin: 0 auto 2rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: center; }
+    .scroll-cue { margin-top: 2.6rem; display: inline-flex; flex-direction: column; align-items: center; gap: 0.6rem; font-size: 0.68rem; letter-spacing: 0.26em; text-transform: uppercase; color: var(--faint); }
+    .scroll-cue i { width: 1px; height: 46px; background: linear-gradient(var(--white), transparent); animation: cue 2.2s ease-in-out infinite; transform-origin: top; }
+    @keyframes cue { 0% { transform: scaleY(0); opacity: 1; } 70% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1); opacity: 0; } }
+    .soon { display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.3rem; font-size: 0.78rem; font-weight: 600; padding: 0.35rem 0.9rem; border-radius: 999px; background: rgba(255, 138, 61, 0.12); border: 1px solid rgba(255, 138, 61, 0.4); color: var(--gold); }
+    .soon::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--horizon); box-shadow: 0 0 10px var(--horizon); }
+
+    /* ===== Culture ribbon ===== */
+    .ribbon { position: relative; z-index: 1; overflow: hidden; padding: 1.3rem 0; border-block: 1px solid var(--line); background: rgba(3, 4, 12, 0.45); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+    .ribbon-track { display: inline-flex; white-space: nowrap; animation: drift 46s linear infinite; }
+    .ribbon-track span { font-family: 'Instrument Serif', serif; font-style: italic; font-size: clamp(1.4rem, 3vw, 2.1rem); padding: 0 1.4rem; color: rgba(255, 255, 255, 0.86); }
+    .ribbon-track span small { font-family: 'Inter', sans-serif; font-style: normal; font-size: 0.75rem; letter-spacing: 0.08em; color: var(--faint); margin-left: 0.6rem; }
+    .ribbon-track b { color: var(--horizon); font-weight: 400; align-self: center; }
+    @keyframes drift { to { transform: translateX(-50%); } }
+
+    /* ===== Craft: process + why drones ===== */
+    .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-top: 1.8rem; counter-reset: step; }
+    .step { padding: 1.1rem 1.15rem; border-radius: 16px; background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .step b { display: block; font-family: 'Syncopate', sans-serif; font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.35rem; }
+    .step b::before { counter-increment: step; content: '0' counter(step) '  '; color: var(--sky); }
+    .step p { font-size: 0.92rem; margin: 0; color: var(--muted); text-shadow: none; }
+
+    .why { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; margin-top: 0.8rem; }
+    .why div { text-align: center; padding: 0.8rem 0.4rem; border-radius: 14px; border: 1px dashed rgba(90, 184, 240, 0.35); font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
+    .why div strong { display: block; font-family: 'Instrument Serif', serif; font-weight: 400; font-size: 1.3rem; color: var(--white); }
+
+    /* ===== Dawn / finale ===== */
+    .dawn { align-items: flex-start; padding-top: 13vh; min-height: 130vh; min-height: 130svh; }
+    .dawn h2 { font-size: clamp(2.5rem, 5.6vw, 4.6rem); }
+    .dawn h2 em { color: var(--white); text-shadow: 0 0 40px rgba(255, 196, 110, 0.9); }
+    .contact { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.8rem; margin-top: 2rem; }
+    .contact .addr { width: 100%; margin-top: 0.4rem; font-size: 0.85rem; color: var(--muted); }
+    .contact .addr button { font: inherit; color: var(--white); background: none; border: none; border-bottom: 1px dashed var(--faint); cursor: pointer; padding: 0; }
+    .socials { display: flex; justify-content: center; gap: 0.7rem; margin-top: 1.6rem; }
+    .socials a { display: inline-flex; align-items: center; gap: 0.55rem; padding: 0.55rem 1rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; background: rgba(3, 4, 12, 0.35); border: 1px solid rgba(255, 255, 255, 0.25); transition: transform 0.25s, border-color 0.25s; }
+    .socials a:hover { transform: translateY(-2px); border-color: var(--white); }
+    .socials svg { width: 17px; height: 17px; }
+
+    footer.end {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 1.3rem 2rem;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+      font-size: 0.8rem; color: rgba(255, 255, 255, 0.82);
+    }
+    footer.end a { border-bottom: 1px solid rgba(255, 255, 255, 0.4); }
+
+    /* ===== Reveal on scroll ===== */
+    .rv { opacity: 0; transform: translateY(28px); transition: opacity 1s ease, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1); }
+    .rv.in { opacity: 1; transform: none; }
+    .rv.d1 { transition-delay: 0.12s; } .rv.d2 { transition-delay: 0.24s; } .rv.d3 { transition-delay: 0.36s; } .rv.d4 { transition-delay: 0.48s; }
+    .no-js .rv { opacity: 1; transform: none; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      .rail { display: none; }
+      .bar { padding: 0.9rem 1rem; }
+      .bar-link { display: none; }
+      .wrap { padding: 0 1rem; }
+      /* Phones: the formation flies in the top half, the story sits below it */
+      .chapter { align-items: flex-end; min-height: 125vh; min-height: 125svh; padding: 52vh 0 4rem; }
+      .chapter .copy, .chapter[data-side="right"] .copy { margin: 0 auto; max-width: 560px; padding: 1.4rem 1.2rem; border-radius: 22px; background: linear-gradient(180deg, rgba(3, 4, 12, 0.35), rgba(3, 4, 12, 0.82) 30%); }
+      .hero { padding-top: 40vh; padding-bottom: 4rem; min-height: 100vh; min-height: 100svh; }
+      .hero .kicker { display: none; }
+      .hero h1 { font-size: 2.3rem; }
+      .hero p.lead { font-size: 1rem; margin-bottom: 1.5rem; }
+      .hero .copy { background: none !important; padding: 0 !important; text-align: center; }
+      .dawn { padding-top: 14vh; align-items: flex-start; min-height: 135svh; }
+      .dawn .copy { background: none !important; }
+      .steps { grid-template-columns: 1fr; }
+      .why { grid-template-columns: 1fr 1fr; }
+      .live { left: 1rem; bottom: 1rem; }
+      .dawn { flex-direction: column; }
+      footer.end { position: static; margin-top: 1.5rem; padding: 1rem; flex-direction: column; align-items: center; text-align: center; }
+    }
+    @media (max-width: 420px) {
+      .brand { font-size: 0.8rem; letter-spacing: 0.24em; }
+      .btn { padding: 0.8rem 1.25rem; }
+      .btn-sm { padding: 0.55rem 0.95rem; font-size: 0.8rem; }
+      .copy p { font-size: 1rem; }
+      .contact .btn { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .rv { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body class="no-js">
+  <canvas id="sky" aria-hidden="true"></canvas>
+
+  <header class="bar">
+    <a href="#hero" class="brand" aria-label="PALSKY home">PALSKY<i>.</i></a>
+    <div class="bar-actions">
+      <a class="bar-link" href="../">By Benjamin Nana Kofi</a>
+      <a class="btn btn-sun btn-sm" href="#dawn">Tell your story</a>
+    </div>
+  </header>
+
+  <nav aria-label="Chapters">
+    <ul class="rail" id="rail">
+      <li><a href="#hero"><span>Prologue</span></a></li>
+      <li><a href="#night"><span>The night</span></a></li>
+      <li><a href="#people"><span>People</span></a></li>
+      <li><a href="#heritage"><span>Heritage</span></a></li>
+      <li><a href="#organizations"><span>Organizations</span></a></li>
+      <li><a href="#industries"><span>Industries</span></a></li>
+      <li><a href="#craft"><span>The craft</span></a></li>
+      <li><a href="#dawn"><span>Dawn</span></a></li>
+    </ul>
+  </nav>
+
+  <div class="live" aria-hidden="true"><span class="rec"></span> Formation · <b id="formationName">PALSKY</b></div>
+
+  <main>
+    <!-- Prologue -->
+    <section class="chapter hero" id="hero" data-side="center" data-formation="palsky" data-label="PALSKY">
+      <div class="wrap" style="width:100%">
+        <div class="copy">
+          <div class="rv"><span class="soon">Launching soon · Accra, Ghana</span></div>
+          <p class="kicker rv d1">Drone light shows · Storytelling in the sky</p>
+          <h1 class="rv d2">Every culture has a story.<br />We tell it <em>in light.</em></h1>
+          <p class="lead rv d3">PALSKY turns the night sky into a stage, using hundreds of synchronized drones to tell the stories of people, organizations and industries.</p>
+          <div class="actions rv d4">
+            <a class="btn btn-sun" href="#night">Begin the story ↓</a>
+            <a class="btn btn-glass" href="#dawn">Tell us yours</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="ribbon" aria-label="Words from the cultures we draw from">
+      <div class="ribbon-track">
+        <span>Akwaaba<small>welcome</small></span><b>✦</b>
+        <span>Sankofa<small>go back and get it</small></span><b>✦</b>
+        <span>Gye Nyame<small>except God</small></span><b>✦</b>
+        <span>Kente<small>woven story</small></span><b>✦</b>
+        <span>Homowo<small>hooting at hunger</small></span><b>✦</b>
+        <span>Adinkra<small>symbols of wisdom</small></span><b>✦</b>
+        <span aria-hidden="true">Akwaaba<small>welcome</small></span><b aria-hidden="true">✦</b>
+        <span aria-hidden="true">Sankofa<small>go back and get it</small></span><b aria-hidden="true">✦</b>
+        <span aria-hidden="true">Gye Nyame<small>except God</small></span><b aria-hidden="true">✦</b>
+        <span aria-hidden="true">Kente<small>woven story</small></span><b aria-hidden="true">✦</b>
+        <span aria-hidden="true">Homowo<small>hooting at hunger</small></span><b aria-hidden="true">✦</b>
+        <span aria-hidden="true">Adinkra<small>symbols of wisdom</small></span><b aria-hidden="true">✦</b>
+      </div>
+    </div>
+
+    <!-- 01 -->
+    <section class="chapter" id="night" data-side="left" data-formation="constellation" data-label="Constellation">
+      <div class="wrap" style="width:100%">
+        <div class="copy">
+          <span class="num rv">01 · The night</span>
+          <h2 class="rv d1">Before there were screens, there was <span class="sky">the sky.</span></h2>
+          <p class="rv d2">For as long as people have gathered, they have looked up, reading stories in the stars and naming them after heroes, harvests and home.</p>
+          <p class="rv d3">PALSKY brings back that ritual. Our drones are the stars, and the night is the stage for the stories that make a place what it is.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 -->
+    <section class="chapter" id="people" data-side="right" data-formation="akwaaba" data-label="Akwaaba">
+      <div class="wrap" style="width:100%">
+        <div class="copy">
+          <span class="num rv">02 · The people</span>
+          <h2 class="rv d1">Akwaaba. <em>You are welcome here.</em></h2>
+          <p class="rv d2">Every community has its own way of greeting, celebrating and remembering. We start by listening to the people behind the moment: their festivals, their language, their symbols.</p>
+          <p class="rv d3">That way the sky speaks <strong>in their voice, not ours.</strong></p>
+          <div class="tags rv d4"><span>Festivals</span><span>Homecomings</span><span>Independence</span><span>Weddings & milestones</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 -->
+    <section class="chapter" id="heritage" data-side="left" data-formation="sankofa" data-label="Sankofa">
+      <div class="wrap" style="width:100%">
+        <div class="copy">
+          <span class="num rv">03 · Heritage</span>
+          <h2 class="rv d1">The future is built from what we <em>carry forward.</em></h2>
+          <p class="rv d2">Adinkra symbols, proverbs, kente patterns: the wisdom handed down through generations is a visual language. We lift it above the city so a new generation can look up and see where they come from.</p>
+          <p class="proverb rv d3">“Se wo were fi na wosankofa a yenkyi.”<small>It is not wrong to go back for what you forgot. The Sankofa proverb.</small></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 -->
+    <section class="chapter" id="organizations" data-side="right" data-formation="emblem" data-label="Your emblem">
+      <div class="wrap" style="width:100%">
+        <div class="copy">
+          <span class="num rv">04 · Organizations</span>
+          <h2 class="rv d1">Your culture, <em>not just your logo.</em></h2>
+          <p class="rv d2">Every organization has a culture: the values it lives by, the milestones it fought for, the people who built it.</p>
+          <p class="rv d3">We choreograph launches, anniversaries and campaigns <strong>scene by scene</strong>, so your audience feels where you came from and where you are going.</p>
+          <div class="tags rv d4"><span>Brand launches</span><span>Anniversaries</span><span>Campaigns</span><span>Corporate events</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 -->
+    <section class="chapter" id="industries" data-side="left" data-formation="cocoa" data-label="Cocoa pod">
+      <div class="wrap" style="width:100%">
+        <div class="copy">
+          <span class="num rv">05 · Industries</span>
+          <h2 class="rv d1">From the cocoa farm to <em>the city skyline.</em></h2>
+          <p class="rv d2">Industries shape the culture of a nation: the farmers, fishermen, makers and builders. A drone show can honour the hands behind the work.</p>
+          <p class="rv d3">Picture a cocoa pod opening into a gift, a fishing canoe crossing the night, or a skyline rising from the ground. <strong>The story of an industry, told to the people it serves.</strong></p>
+          <div class="tags rv d4"><span>Agriculture</span><span>Energy & mining</span><span>Telecoms</span><span>Tourism</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 -->
+    <section class="chapter" id="craft" data-side="right" data-formation="kente" data-label="Kente weave">
+      <div class="wrap" style="width:100%">
+        <div class="copy">
+          <span class="num rv">06 · The craft</span>
+          <h2 class="rv d1">Woven like kente. <em>Drone by drone.</em></h2>
+          <p class="rv d2">Every drone is a thread. Every flight path is planned, timed and tested until the picture holds.</p>
+          <div class="steps">
+            <div class="step rv d1"><b>Listen</b><p>We learn the story: the people, the symbols, the moment.</p></div>
+            <div class="step rv d2"><b>Design</b><p>We storyboard each scene as formations in the sky.</p></div>
+            <div class="step rv d3"><b>Choreograph</b><p>Each drone gets its own flight path, set to music.</p></div>
+            <div class="step rv d4"><b>Fly</b><p>Safety first, with the right permissions, on the night.</p></div>
+          </div>
+          <div class="why rv d4">
+            <div><strong>No smoke</strong>clean air</div>
+            <div><strong>Quiet</strong>kind to neighbours</div>
+            <div><strong>Reusable</strong>no debris</div>
+            <div><strong>Any shape</strong>logos & symbols</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 -->
+    <section class="chapter dawn" id="dawn" data-side="center" data-formation="sunrise" data-label="Sunrise">
+      <div class="wrap" style="width:100%">
+        <div class="copy">
+          <span class="num rv">07 · Dawn</span>
+          <h2 class="rv d1">Every story ends at dawn.<br /><em>Yours starts here.</em></h2>
+          <p class="rv d2">Tell us about your people, your organization or your industry, and we’ll help you tell it in the sky.</p>
+          <div class="contact rv d3">
+            <a class="btn btn-sun" target="_blank" rel="noopener"
+               href="https://mail.google.com/mail/?view=cm&fs=1&to=palskystudios@gmail.com&su=Our%20story%20in%20the%20sky&body=Hi%20PALSKY%20team%2C%20we%E2%80%99d%20love%20to%20tell%20our%20story%20in%20the%20sky.">✉️ Write to us in Gmail</a>
+            <a class="btn btn-glass" href="mailto:palskystudios@gmail.com?subject=Our%20story%20in%20the%20sky">Open email app</a>
+            <p class="addr">or copy <button type="button" id="copyEmail">palskystudios@gmail.com</button></p>
+          </div>
+          <div class="socials rv d4">
+            <a href="https://www.instagram.com/palskystudios/" target="_blank" rel="noopener" aria-label="PALSKY on Instagram (@palskystudios)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.6" fill="currentColor"/></svg>
+              Instagram
+            </a>
+            <a href="https://www.tiktok.com/@palskystudios" target="_blank" rel="noopener" aria-label="PALSKY on TikTok (@palskystudios)">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+              TikTok
+            </a>
+          </div>
+        </div>
+      </div>
+      <footer class="end">
+        <span>© <span id="year">2026</span> PALSKY · Homegrown in Accra · Culture, told in light</span>
+        <span>A project by <a href="../">Benjamin Nana Kofi</a></span>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    document.body.classList.remove('no-js');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ===== Copy email =====
+    document.getElementById('copyEmail').addEventListener('click', async e => {
+      const btn = e.currentTarget, email = 'palskystudios@gmail.com';
+      let ok = false;
+      try { await navigator.clipboard.writeText(email); ok = true; } catch (err) {}
+      btn.textContent = ok ? 'Copied ✓' : email;
+      if (ok) setTimeout(() => { btn.textContent = email; }, 2000);
+    });
+
+    // ===== Reveal copy as it scrolls in =====
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.rv').forEach(el => io.observe(el));
+
+    // ===== The sky: stars, city, horizon and the drone fleet =====
+    (function sky() {
+      const canvas = document.getElementById('sky');
+      const ctx = canvas.getContext('2d');
+      const label = document.getElementById('formationName');
+      const railLinks = [...document.querySelectorAll('#rail a')];
+      const chapters = [...document.querySelectorAll('.chapter')];
+      const dawnSection = document.getElementById('dawn');
+
+      const small = window.innerWidth < 700;
+      const COUNT = small ? 320 : 560;
+      const WHITE = [255, 255, 255], SKY = [90, 184, 240], HORIZON = [255, 138, 61], GOLD = [255, 196, 110];
+      const mix = (a, b, t) => { t = Math.max(0, Math.min(1, t)); return [0, 1, 2].map(i => a[i] + (b[i] - a[i]) * t); };
+      const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+      const jitter = s => (Math.random() - 0.5) * s;
+
+      let w = 0, h = 0, dpr = 1, mobile = false, groundY = 0;
+
+      // ----- Formations: COUNT points in a unit box (y points down), each with a colour -----
+      const evenly = (n, fn) => Array.from({ length: n }, (_, i) => fn(i / n, i));
+
+      function fill(parts) {
+        // parts: [[share, generator(t, i)], ...] -> exactly COUNT points
+        const pts = [];
+        parts.forEach(([share, gen], k) => {
+          const n = k === parts.length - 1 ? COUNT - pts.length : Math.round(COUNT * share);
+          for (let i = 0; i < n; i++) pts.push(gen(i / n, i));
+        });
+        return pts;
+      }
+
+      function text(word, colour) {
+        const W = 1000, H = 300;
+        const off = document.createElement('canvas');
+        off.width = W; off.height = H;
+        const o = off.getContext('2d');
+        o.fillStyle = '#fff'; o.textAlign = 'center'; o.textBaseline = 'middle';
+        const fam = 'Syncopate, "Space Grotesk", sans-serif';
+        const spacing = s => { if ('letterSpacing' in o) o.letterSpacing = (s * 0.08).toFixed(1) + 'px'; };
+        o.font = `700 100px ${fam}`; spacing(100);
+        const size = Math.min(230, (100 * 900) / o.measureText(word).width);
+        o.font = `700 ${size.toFixed(1)}px ${fam}`; spacing(size);
+        o.fillText(word, W / 2 + ('letterSpacing' in o ? size * 0.04 : 0), H / 2);
+        const data = o.getImageData(0, 0, W, H).data;
+        const px = [];
+        for (let y = 0; y < H; y += 3) for (let x = 0; x < W; x += 3) if (data[(y * W + x) * 4 + 3] > 128) px.push([x, y]);
+        if (!px.length) return constellation();
+        return evenly(COUNT, t => {
+          const [x, y] = px[Math.floor(t * px.length)];
+          const p = { x: (x - W / 2) / 450 + jitter(0.006), y: (y - H / 2) / 450 + jitter(0.006), z: jitter(0.03) };
+          p.c = colour(p);
+          return p;
+        });
+      }
+
+      function constellation() {
+        // Drones scattered deep and wide, like a field of stars; a few burn brighter
+        return evenly(COUNT, (t, i) => {
+          const bright = i % 9 === 0;
+          const base = mix(WHITE, SKY, Math.random() * 0.6);
+          return { x: jitter(3.4), y: jitter(1.9) - 0.1, z: jitter(1.6), c: bright ? WHITE : base.map(v => v * 0.55) };
+        });
+      }
+
+      function heartXY(t) {
+        const x = 16 * Math.pow(Math.sin(t), 3);
+        const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+        return [x / 17, -y / 17 - 0.15];
+      }
+
+      function spiral(cx, cy, r0, turns, dir, start) {
+        return t => {
+          const a = start + dir * t * turns * Math.PI * 2;
+          const r = r0 * (1 - t * 0.92);
+          return [cx + Math.cos(a) * r, cy + Math.sin(a) * r];
+        };
+      }
+
+      function sankofa() {
+        // Adinkra Sankofa heart: a heart whose top lobes curl inward, with small curls at the base
+        const sL = spiral(-0.42, -0.4, 0.3, 1.25, 1, Math.PI);
+        const sR = spiral(0.42, -0.4, 0.3, 1.25, -1, 0);
+        const bL = spiral(-0.42, 0.72, 0.13, 1, -1, 0);
+        const bR = spiral(0.42, 0.72, 0.13, 1, 1, Math.PI);
+        const pt = (xy, c) => ({ x: xy[0] + jitter(0.01), y: xy[1] + jitter(0.01), z: jitter(0.05), c });
+        return fill([
+          [0.5, t => pt(heartXY(t * Math.PI * 2), mix(HORIZON, GOLD, Math.random() * 0.4))],
+          [0.18, t => pt(sL(t), mix(WHITE, GOLD, t))],
+          [0.18, t => pt(sR(t), mix(WHITE, GOLD, t))],
+          [0.07, t => pt(bL(t), SKY)],
+          [0.07, t => pt(bR(t), SKY)]
+        ]);
+      }
+
+      function starPoint(t, ro, ri, rot) {
+        const f = t * 10, k = Math.floor(f), u = f - k;
+        const corner = j => { const r = j % 2 === 0 ? ro : ri; const a = -Math.PI / 2 + rot + (j * Math.PI) / 5; return [Math.cos(a) * r, Math.sin(a) * r]; };
+        const a = corner(k), b = corner((k + 1) % 10);
+        return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+      }
+
+      function emblem() {
+        // A crest: two rings around a star (a nod to Ghana's Black Star), the shape a brand mark could take
+        return fill([
+          [0.36, t => { const a = t * Math.PI * 2; return { x: Math.cos(a) * 0.95, y: Math.sin(a) * 0.95, z: jitter(0.04), c: SKY }; }],
+          [0.16, t => { const a = t * Math.PI * 2; return { x: Math.cos(a) * 0.84, y: Math.sin(a) * 0.84, z: jitter(0.04), c: mix(SKY, WHITE, 0.5) }; }],
+          [0.32, t => { const [x, y] = starPoint(t, 0.62, 0.25, 0); return { x, y, z: jitter(0.04), c: WHITE }; }],
+          [0.16, () => { const [x, y] = starPoint(Math.random(), 0.62, 0.25, 0); const s = Math.sqrt(Math.random()) * 0.85; return { x: x * s, y: y * s, z: jitter(0.04), c: GOLD }; }]
+        ]);
+      }
+
+      function cocoa() {
+        // A cocoa pod: pointed ends, ridges running down its length, a stem at the top
+        const rot = 0.38, cs = Math.cos(rot), sn = Math.sin(rot);
+        const turn = (x, y, c) => ({ x: x * cs - y * sn, y: x * sn + y * cs, z: jitter(0.06), c });
+        const pod = s => 0.44 * Math.pow(Math.sin(s), 1.45);
+        return fill([
+          [0.46, t => { const s = t * Math.PI * 2; const y = -0.88 * Math.cos(s); return turn(Math.sign(Math.sin(s)) * pod(s), y, mix(GOLD, HORIZON, (y + 0.9) / 1.8)); }],
+          [0.42, (t, i) => { const k = [-0.62, -0.25, 0.25, 0.62][i % 4]; const s = 0.08 + t * (Math.PI - 0.16); return turn(k * pod(s), -0.88 * Math.cos(s), mix(HORIZON, GOLD, 0.5)); }],
+          [0.12, t => turn(0.02 + t * 0.07, -0.88 - t * 0.2, WHITE)]
+        ]);
+      }
+
+      function kente() {
+        // Woven blocks: stripes alternate horizontal / vertical, like strips of kente cloth sewn together
+        const cols = 4, rows = 3, bw = 2.1 / cols, bh = 1.5 / rows, stripes = 3;
+        const palette = [HORIZON, GOLD, SKY, WHITE];
+        return evenly(COUNT, (t, i) => {
+          const block = i % (cols * rows), j = Math.floor(i / (cols * rows));
+          const bx = block % cols, by = Math.floor(block / cols);
+          const s = j % stripes, along = (j * 0.618034) % 1;
+          const x0 = -1.05 + bx * bw, y0 = -0.75 + by * bh;
+          const across = (s + 0.5) / stripes;
+          const horiz = (bx + by) % 2 === 0;
+          const x = x0 + (horiz ? along : across) * bw * 0.9 + bw * 0.05;
+          const y = y0 + (horiz ? across : along) * bh * 0.9 + bh * 0.05;
+          return { x, y, z: jitter(0.04), c: palette[(s + bx + by) % 4] };
+        });
+      }
+
+      function sunrise() {
+        // The sun lifting over the horizon with rays: the end of the night, the start of a story
+        const cy = 0.5;
+        return fill([
+          [0.5, () => { const a = Math.PI + Math.random() * Math.PI; const r = Math.sqrt(Math.random()) * 0.6; return { x: Math.cos(a) * r, y: cy + Math.sin(a) * r, z: jitter(0.05), c: mix(WHITE, HORIZON, r / 0.6) }; }],
+          [0.38, (t, i) => { const k = i % 11; const a = Math.PI + 0.12 + (k / 10) * (Math.PI - 0.24); const r = 0.74 + ((i * 0.618034) % 1) * 0.42; return { x: Math.cos(a) * r, y: cy + Math.sin(a) * r, z: jitter(0.05), c: mix(GOLD, WHITE, (r - 0.74) / 0.42) }; }],
+          [0.12, t => ({ x: -1.4 + t * 2.8, y: cy + 0.02, z: jitter(0.05), c: HORIZON })]
+        ]);
+      }
+
+      const builders = {
+        palsky: () => text('PALSKY', p => mix(WHITE, GOLD, (p.y + 0.12) / 0.3)),
+        constellation,
+        akwaaba: () => text('AKWAABA', p => mix(HORIZON, WHITE, (p.x + 1) / 2)),
+        sankofa, emblem, cocoa, kente, sunrise
+      };
+      const cache = {};
+      const formation = key => cache[key] || (cache[key] = builders[key]());
+
+      // ----- Where the formation sits on screen for each chapter -----
+      function anchorFor(section) {
+        const key = section.dataset.formation, side = section.dataset.side;
+        if (mobile) {
+          if (key === 'sunrise') return { x: w * 0.5, y: h * 0.92 - Math.min(w * 0.46, h * 0.3) * 0.5, r: Math.min(w * 0.46, h * 0.3) };
+          if (key === 'palsky' || key === 'akwaaba') return { x: w * 0.5, y: h * 0.3, r: w * 0.46 };
+          return { x: w * 0.5, y: h * 0.27, r: Math.min(w * 0.4, h * 0.2) };
+        }
+        if (key === 'palsky') return { x: w * 0.5, y: h * 0.3, r: Math.min(w * 0.36, h * 0.6) };
+        if (key === 'sunrise') { const r = Math.min(w * 0.32, h * 0.36); return { x: w * 0.5, y: h * 0.93 - r * 0.5, r }; }
+        const r = Math.min(w * 0.22, h * 0.32);
+        if (side === 'left') return { x: w * 0.71, y: h * 0.48, r };
+        if (side === 'right') return { x: w * 0.29, y: h * 0.48, r };
+        return { x: w * 0.5, y: h * 0.45, r };
+      }
+
+      // ----- Stars, skyline -----
+      let stars = [], shooting = null, nextShoot = 3000;
+      function makeStars() {
+        const n = small ? 170 : 300;
+        stars = Array.from({ length: n }, () => ({ x: Math.random(), y: Math.random() * 0.9, r: Math.random() < 0.08 ? 1.6 : 0.4 + Math.random() * 0.9, ph: Math.random() * 6.28, sp: 0.6 + Math.random() * 1.8 }));
+      }
+
+      let skyline = null, windows = [];
+      function buildSkyline() {
+        let seed = 11;
+        const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+        const top = Math.max(46, h * 0.1);
+        groundY = h - top * 0.25;
+        const p = new Path2D();
+        windows = [];
+        const gw = Math.max(80, Math.min(170, w * 0.13)), gh = gw * 0.5, gx = w * 0.2;
+        p.moveTo(0, h);
+        let x = 0;
+        while (x < w) {
+          const bw = 14 + rnd() * 42;
+          let bh = top * (0.25 + rnd() * 0.6);
+          if (rnd() > 0.9) bh = top * (1 + rnd() * 0.5);               // the odd tower
+          if (x + bw > gx - gw / 2 - 8 && x < gx + gw / 2 + 8) bh = top * 0.12; // open ground around the gate
+          p.lineTo(x, h - bh); p.lineTo(x + bw, h - bh);
+          for (let wy = h - bh + 6; wy < h - 6; wy += 9) for (let wx = x + 4; wx < x + bw - 4; wx += 7) if (rnd() > 0.82) windows.push([wx, wy]);
+          x += bw;
+        }
+        p.lineTo(w, h); p.closePath();
+
+        // Black Star Gate, Accra: a wide arch crowned with a star
+        const g = new Path2D();
+        const gb = h - top * 0.12;
+        g.rect(gx - gw / 2, gb - gh, gw, gh);
+        const ow = gw * 0.34, oh = gh * 0.62;
+        g.moveTo(gx - ow / 2, gb); g.lineTo(gx - ow / 2, gb - oh + ow / 2);
+        g.arc(gx, gb - oh + ow / 2, ow / 2, Math.PI, 0); g.lineTo(gx + ow / 2, gb); g.closePath();
+        const sr = gw * 0.11, sy = gb - gh - sr * 1.1;
+        for (let k = 0; k <= 10; k++) {
+          const r = k % 2 === 0 ? sr : sr * 0.42, a = -Math.PI / 2 + (k * Math.PI) / 5;
+          k === 0 ? g.moveTo(gx + Math.cos(a) * r, sy + Math.sin(a) * r) : g.lineTo(gx + Math.cos(a) * r, sy + Math.sin(a) * r);
+        }
+        g.rect(gx - sr * 0.15, sy, sr * 0.3, gb - gh - sy);
+
+        // Palm trees
+        const palms = new Path2D();
+        [0.06, 0.34, 0.58, 0.88].forEach((f, k) => {
+          const px = w * f, ph = top * (1.1 + (k % 2) * 0.35), bx = px + 8, tx = px, ty = h - ph;
+          palms.moveTo(bx - 2, h); palms.quadraticCurveTo(px + 10, h - ph * 0.5, tx, ty); palms.lineTo(tx + 3, ty); palms.quadraticCurveTo(px + 13, h - ph * 0.5, bx + 3, h); palms.closePath();
+          for (let f2 = 0; f2 < 7; f2++) {
+            const a = -Math.PI + (f2 / 6) * Math.PI, L = top * 0.42;
+            palms.moveTo(tx, ty);
+            palms.quadraticCurveTo(tx + Math.cos(a) * L * 0.6, ty + Math.sin(a) * L * 0.5 - 8, tx + Math.cos(a) * L, ty + Math.sin(a) * L * 0.3 + 10);
+            palms.quadraticCurveTo(tx + Math.cos(a) * L * 0.6, ty + Math.sin(a) * L * 0.5 - 4, tx, ty + 3);
+          }
+        });
+        skyline = { p, g, palms };
+      }
+
+      // ----- Drones -----
+      let drones = [], active = null, anchor = { x: 0, y: 0, r: 1 }, goal = anchor;
+      function launch() {
+        // Lift-off: the fleet waits on the ground behind the city, then rises in waves
+        drones = Array.from({ length: COUNT }, () => ({
+          x: w * (0.1 + Math.random() * 0.8), y: groundY + Math.random() * 10, z: 0,
+          px: 0, py: 0,
+          speed: 0.022 + Math.random() * 0.03,
+          delay: 300 + Math.random() * 1600,
+          phase: Math.random() * 6.28,
+          c: [255, 255, 255], t: null, tc: WHITE
+        }));
+        drones.forEach(d => { d.px = d.x; d.py = d.y; });
+      }
+
+      function setChapter(section) {
+        if (section === active) return;
+        active = section;
+        const pts = formation(section.dataset.formation);
+        drones.forEach((d, i) => { d.t = pts[i]; d.tc = pts[i].c; });
+        goal = anchorFor(section);
+        label.textContent = section.dataset.label;
+        railLinks.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + section.id));
+        if (reduceMotion) { anchor = goal; snap(); draw(0); }
+      }
+
+      function pickChapter() {
+        const mid = h * 0.5;
+        let current = chapters[0];
+        for (const s of chapters) if (s.getBoundingClientRect().top <= mid) current = s;
+        setChapter(current);
+      }
+
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = window.innerWidth; h = window.innerHeight;
+        mobile = w < 900;
+        canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        buildSkyline();
+        if (active) { goal = anchorFor(active); if (reduceMotion) { anchor = goal; snap(); draw(0); } }
+      }
+
+      // How far into the final chapter we are: 0 = deep night, 1 = full sunrise
+      function dawnAmount() {
+        const r = dawnSection.getBoundingClientRect();
+        return smooth(h * 0.95, h * 0.05, r.top);
+      }
+
+      function screenTarget(d, sway) {
+        const cs = Math.cos(sway), sn = Math.sin(sway);
+        const x = d.t.x * cs + d.t.z * sn, z = -d.t.x * sn + d.t.z * cs;
+        const persp = 3 / (3 + z);
+        return [anchor.x + x * anchor.r * persp, anchor.y + d.t.y * anchor.r * persp, z, persp];
+      }
+
+      function snap() {
+        drones.forEach(d => { const [x, y, z] = screenTarget(d, 0); d.x = d.px = x; d.y = d.py = y; d.z = z; d.c = d.tc.slice(); d.delay = 0; });
+      }
+
+      function drawSky(time, dawn) {
+        const g = ctx.createLinearGradient(0, 0, 0, h);
+        g.addColorStop(0, '#01020a'); g.addColorStop(0.55, '#050a1d'); g.addColorStop(1, '#0d1a3c');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+        if (dawn > 0) {
+          const d = ctx.createLinearGradient(0, 0, 0, h);
+          d.addColorStop(0, '#0f2550'); d.addColorStop(0.45, '#3f7bbd'); d.addColorStop(0.78, '#ffb070'); d.addColorStop(1, '#ff8a3d');
+          ctx.globalAlpha = dawn; ctx.fillStyle = d; ctx.fillRect(0, 0, w, h); ctx.globalAlpha = 1;
+        }
+        // Horizon glow: city lights at night, the sun at dawn
+        const glow = ctx.createRadialGradient(w * 0.5, h * 1.05, 0, w * 0.5, h * 1.05, Math.max(w, h) * 0.75);
+        glow.addColorStop(0, `rgba(255,138,61,${0.22 + dawn * 0.6})`);
+        glow.addColorStop(1, 'rgba(255,138,61,0)');
+        ctx.fillStyle = glow; ctx.fillRect(0, 0, w, h);
+
+        // Stars, drifting slightly with scroll for depth
+        const fade = 1 - dawn * 0.9, shift = (window.scrollY * 0.03) % h;
+        for (const s of stars) {
+          const a = (0.35 + 0.65 * (0.5 + 0.5 * Math.sin(time * 0.001 * s.sp + s.ph))) * fade;
+          let y = s.y * h - shift; if (y < 0) y += h;
+          ctx.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`;
+          ctx.fillRect(s.x * w, y, s.r, s.r);
+        }
+
+        // An occasional shooting star
+        if (!reduceMotion && dawn < 0.5) {
+          if (!shooting && time > nextShoot) {
+            shooting = { x: Math.random() * w * 0.8 + w * 0.1, y: Math.random() * h * 0.35, vx: -(4 + Math.random() * 4), vy: 2 + Math.random() * 2, life: 1 };
+            nextShoot = time + 5000 + Math.random() * 7000;
+          }
+          if (shooting) {
+            const s = shooting;
+            const tail = ctx.createLinearGradient(s.x, s.y, s.x - s.vx * 14, s.y - s.vy * 14);
+            tail.addColorStop(0, `rgba(255,255,255,${s.life})`); tail.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.strokeStyle = tail; ctx.lineWidth = 1.4;
+            ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x - s.vx * 14, s.y - s.vy * 14); ctx.stroke();
+            s.x += s.vx; s.y += s.vy; s.life -= 0.018;
+            if (s.life <= 0) shooting = null;
+          }
+        }
+      }
+
+      function drawDrones(time, dt) {
+        anchor = {
+          x: anchor.x + (goal.x - anchor.x) * 0.06,
+          y: anchor.y + (goal.y - anchor.y) * 0.06,
+          r: anchor.r + (goal.r - anchor.r) * 0.06
+        };
+        const spin = active && active.dataset.formation === 'constellation' ? time * 0.00012 : 0;
+        const sway = Math.sin(time * 0.00035) * 0.28 + spin;
+        ctx.globalCompositeOperation = 'lighter';
+        for (const d of drones) {
+          if (!d.t) continue;
+          const [tx, ty, tz, persp] = screenTarget(d, sway);
+          d.px = d.x; d.py = d.y;
+          if (time > d.delay) {
+            const f = 1 - Math.pow(1 - d.speed, dt / 16.7);
+            d.x += (tx - d.x) * f; d.y += (ty - d.y) * f; d.z += (tz - d.z) * f;
+          }
+          for (let c = 0; c < 3; c++) d.c[c] += (d.tc[c] - d.c[c]) * 0.05;
+          const hover = Math.sin(time * 0.002 + d.phase) * 1.2;
+          const x = d.x, y = d.y + hover;
+          const size = Math.max(0.7, 1.55 * persp * (mobile ? 0.9 : 1));
+          const r = d.c[0] | 0, g = d.c[1] | 0, b = d.c[2] | 0;
+          // Light trail while a drone is travelling between formations
+          const mv = Math.hypot(d.x - d.px, d.y - d.py);
+          if (mv > 1.2) {
+            ctx.strokeStyle = `rgba(${r},${g},${b},${Math.min(0.5, mv / 30).toFixed(3)})`;
+            ctx.lineWidth = size;
+            ctx.beginPath(); ctx.moveTo(d.px - (d.x - d.px) * 3, d.py + hover - (d.y - d.py) * 3); ctx.lineTo(x, y); ctx.stroke();
+          }
+          ctx.fillStyle = `rgba(${r},${g},${b},0.13)`;
+          ctx.beginPath(); ctx.arc(x, y, size * 4.2, 0, 6.2832); ctx.fill();
+          ctx.fillStyle = `rgb(${r},${g},${b})`;
+          ctx.beginPath(); ctx.arc(x, y, size, 0, 6.2832); ctx.fill();
+        }
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      function drawCity(dawn) {
+        ctx.fillStyle = '#010208';
+        ctx.fill(skyline.p); ctx.fill(skyline.palms);
+        ctx.fill(skyline.g, 'evenodd');
+        ctx.fillStyle = `rgba(255,196,110,${(0.55 * (1 - dawn)).toFixed(3)})`;
+        for (const [x, y] of windows) ctx.fillRect(x, y, 1.6, 1.6);
+      }
+
+      let last = 0;
+      function draw(time) {
+        const dt = Math.min(50, time - last || 16.7); last = time;
+        const dawn = dawnAmount();
+        drawSky(time, dawn);
+        drawDrones(time, dt);
+        drawCity(dawn);
+      }
+
+      function start() {
+        resize();
+        makeStars();
+        launch();
+        pickChapter();
+        anchor = goal;
+        window.addEventListener('resize', resize);
+        window.addEventListener('scroll', pickChapter, { passive: true });
+        if (reduceMotion) {
+          snap(); draw(0);
+          window.addEventListener('scroll', () => draw(0), { passive: true });
+          return;
+        }
+        const t0 = performance.now();
+        (function loop(now) {
+          requestAnimationFrame(loop);
+          draw(now - t0);
+        })(t0);
+      }
+
+      // Wait for Syncopate so the lettered formations use the brand typeface
+      if (document.fonts && document.fonts.load) {
+        Promise.race([document.fonts.load('700 100px Syncopate'), new Promise(r => setTimeout(r, 2500))]).then(start, start);
+      } else {
+        start();
+      }
+    })();
+  </script>
+</body>
+</html>
