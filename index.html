@@ -12,7 +12,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=Syncopate:wght@700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=Syncopate:wght@700&family=Unbounded:wght@600&display=swap" rel="stylesheet" />
 
   <script>
     // Apply saved theme before paint to avoid a light/dark flash
@@ -558,15 +558,15 @@
     .spotlight-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: #ffb547; animation: pulseGold 1.8s ease-in-out infinite; }
     @keyframes pulseGold { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 181, 71, 0.6); } 50% { box-shadow: 0 0 0 7px rgba(255, 181, 71, 0); } }
 
-    /* PALSKY wordmark: wide, elegant Syncopate in white with a slow silver shimmer */
+    /* PALSKY wordmark: the brand's Unbounded SemiBold, lowercase, in white with a slow silver shimmer */
     .wordmark {
       display: inline-block;
-      font-family: 'Syncopate', 'Space Grotesk', sans-serif;
-      font-weight: 700;
+      font-family: 'Unbounded', 'Syncopate', sans-serif;
+      font-weight: 600;
       font-size: clamp(2.2rem, 5.6vw, 4.2rem);
       line-height: 1.1;
-      letter-spacing: 0.14em;
-      margin: 0 -0.14em 1rem 0;   /* cancel the trailing letter-space so it stays centered */
+      letter-spacing: 0.01em;
+      margin: 0 0 1rem 0;
       background: linear-gradient(100deg, #ffffff 0%, #ffffff 35%, #cfd8ff 50%, #ffffff 65%, #ffffff 100%);
       background-size: 250% auto;
       -webkit-background-clip: text;
@@ -976,7 +976,7 @@
       <div class="palsky-text reveal">
         <span class="eyebrow">Upcoming · What I’m building</span>
         <div><span class="spotlight-badge"><span class="dot"></span> In development</span></div>
-        <h2 class="wordmark">PALSKY</h2>
+        <h2 class="wordmark" aria-label="PALSKY">palsky</h2>
         <p class="tagline">Drone light shows that paint the night sky.</p>
         <p>PALSKY is the drone show company I’m building — born in Accra, made for the world’s biggest moments. We design shows where fleets of synchronized, light-up drones tell the story of a culture — of people, organizations and industries — high above the crowd: a quiet, smoke-free spectacle people won’t forget.</p>
         <div class="use-cases">
@@ -1691,16 +1691,16 @@
         o.fillStyle = '#fff';
         o.textAlign = 'center';
         o.textBaseline = 'middle';
-        // Same wide Syncopate lettering as the PALSKY heading, auto-sized so the word spans ~660px of the 900px canvas
-        const family = 'Syncopate, "Space Grotesk", sans-serif';
-        const spacing = size => { if ('letterSpacing' in o) o.letterSpacing = `${(size * 0.1).toFixed(1)}px`; };
-        o.font = `700 100px ${family}`;
+        // Same Unbounded SemiBold lettering as the palsky heading, auto-sized so the word spans ~660px of the 900px canvas
+        const family = 'Unbounded, Syncopate, sans-serif';
+        const spacing = size => { if ('letterSpacing' in o) o.letterSpacing = `${(size * 0.01).toFixed(1)}px`; };
+        o.font = `600 100px ${family}`;
         spacing(100);
         const size = Math.min(200, (100 * 660) / o.measureText(word).width);
-        o.font = `700 ${size.toFixed(1)}px ${family}`;
+        o.font = `600 ${size.toFixed(1)}px ${family}`;
         spacing(size);
         // letterSpacing adds a gap after the last letter too, so nudge right by half of it to stay centered
-        o.fillText(word, 450 + ('letterSpacing' in o ? size * 0.05 : 0), 135);
+        o.fillText(word, 450 + ('letterSpacing' in o ? size * 0.005 : 0), 135);
         const data = o.getImageData(0, 0, 900, 260).data;
         const pixels = [];
         // Smaller lettering on narrow (phone) stages so the word keeps a margin from the frame edges
@@ -1743,7 +1743,7 @@
       }
 
       const formations = [
-        { name: 'PALSKY', build: () => text('PALSKY'), color: (p) => [255, 196 + p.y * 60, 90] },
+        { name: 'PALSKY', build: () => text('palsky'), color: (p) => [255, 196 + p.y * 60, 90] },
         { name: 'Globe', build: sphere, spin: true, color: (p) => [90 + p.y * 120, 150 + p.y * 60, 255] },
         { name: 'Heart', build: heart, color: () => [255, 80, 120] },
         { name: 'Star', build: star, color: (p) => [255, 220 + p.y * 40, 140] }
@@ -1835,9 +1835,9 @@
         })(0);
       };
 
-      // Wait for the Syncopate font so the PALSKY formation uses the right letter shapes
+      // Wait for the Unbounded font so the palsky formation uses the right letter shapes
       if (document.fonts && document.fonts.load) {
-        document.fonts.load('700 100px Syncopate').then(start, start);
+        document.fonts.load('600 100px Unbounded').then(start, start);
       } else {
         start();
       }
