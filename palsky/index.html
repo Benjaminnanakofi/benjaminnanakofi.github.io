@@ -238,7 +238,8 @@
   </style>
 </head>
 <body class="no-js">
-  <canvas id="sky" aria-hidden="true"></canvas>
+  <!-- data-logo: path to the PALSKY logo mark (transparent PNG or SVG). When set, the opening scene alternates logo and wordmark. -->
+  <canvas id="sky" aria-hidden="true" data-logo=""></canvas>
 
   <header class="bar">
     <a href="#hero" class="brand" aria-label="PALSKY home">PALSKY<i>.</i></a>
@@ -607,16 +608,68 @@
       const cache = {};
       const formation = key => cache[key] || (cache[key] = builders[key]());
 
+      // Chapters whose formation changes on its own: [formation, label] steps and how long each holds
+      const sequences = { welcome: { hold: 4600, steps: WELCOMES.map(([, l], i) => ['welcome' + i, l]) } };
+
+      // The logo mark: drones sample the logo image's solid pixels, like the lettered formations do
+      function logoFormation(img) {
+        const S = 600;
+        const off = document.createElement('canvas');
+        off.width = S; off.height = S;
+        const o = off.getContext('2d');
+        const k = Math.min((S * 0.92) / img.width, (S * 0.92) / img.height);
+        const ox = Math.ceil((S - img.width * k) / 2), oy = Math.ceil((S - img.height * k) / 2);
+        o.drawImage(img, (S - img.width * k) / 2, (S - img.height * k) / 2, img.width * k, img.height * k);
+        const data = o.getImageData(0, 0, S, S).data;
+        const lum = i => 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        // A logo on a solid background: the mark is whatever differs from the image's own corner colour
+        const corner = ((oy + 1) * S + ox + 1) * 4;
+        const bgSolid = data[corner + 3] > 200, bgLum = lum(corner);
+        const px = [];
+        for (let y = 0; y < S; y += 3) for (let x = 0; x < S; x += 3) {
+          const i = (y * S + x) * 4;
+          if (data[i + 3] < 128 || (bgSolid && Math.abs(lum(i) - bgLum) < 60)) continue;
+          px.push([x, y, i]);
+        }
+        if (px.length < 60) return null;
+        return evenly(COUNT, t => {
+          const [x, y, i] = px[Math.floor(t * px.length)];
+          // Keep the logo's own colours where they glow; dark ink becomes white-gold light
+          const c = lum(i) > 110 ? mix([data[i], data[i + 1], data[i + 2]], WHITE, 0.15) : mix(WHITE, GOLD, (y / S) * 0.8);
+          return { x: (x - S / 2) / (S * 0.46) + jitter(0.006), y: (y - S / 2) / (S * 0.46) + jitter(0.006), z: jitter(0.03), c };
+        });
+      }
+
+      function loadLogo() {
+        const src = canvas.dataset.logo;
+        if (!src) return Promise.resolve();
+        return new Promise(done => {
+          const img = new Image();
+          img.onload = () => {
+            const pts = logoFormation(img);
+            if (pts) {
+              cache.logo = pts;
+              sequences.palsky = { hold: 5200, steps: [['palsky', 'PALSKY'], ['logo', 'PALSKY logo mark']] };
+            }
+            done();
+          };
+          img.onerror = () => done();
+          img.src = src;
+        });
+      }
+
       // ----- Where the formation sits on screen for each chapter -----
-      function anchorFor(section) {
-        const key = section.dataset.formation, side = section.dataset.side;
+      function anchorFor(section, current) {
+        const key = current.startsWith('welcome') ? 'welcome' : current, side = section.dataset.side;
         if (mobile) {
+          if (key === 'logo') return { x: w * 0.5, y: h * 0.25, r: Math.min(w * 0.3, h * 0.17) };
           if (key === 'sunrise') return { x: w * 0.5, y: h * 0.92 - Math.min(w * 0.46, h * 0.3) * 0.5, r: Math.min(w * 0.46, h * 0.3) };
           if (key === 'palsky') return { x: w * 0.5, y: h * 0.3, r: w * 0.46 };
           if (key === 'welcome') return { x: w * 0.5, y: h * 0.19, r: w * 0.46 };
           return { x: w * 0.5, y: h * 0.27, r: Math.min(w * 0.4, h * 0.2) };
         }
         if (key === 'palsky') return { x: w * 0.5, y: h * 0.3, r: Math.min(w * 0.36, h * 0.6) };
+        if (key === 'logo') return { x: w * 0.5, y: h * 0.24, r: Math.min(w * 0.2, h * 0.16) };
         if (key === 'sunrise') { const r = Math.min(w * 0.32, h * 0.36); return { x: w * 0.5, y: h * 0.93 - r * 0.5, r }; }
         const r = Math.min(w * 0.22, h * 0.32);
         if (side === 'left') return { x: w * 0.71, y: h * 0.48, r };
@@ -738,25 +791,26 @@
         drones.forEach(d => { d.px = d.x; d.py = d.y; });
       }
 
-      let word = 0, wordAt = 0;
-      function fly(key) {
+      let currentKey = '', step = 0, stepAt = 0;
+      function fly(key, text) {
+        currentKey = key;
         const pts = formation(key);
         drones.forEach((d, i) => { d.t = pts[i]; d.tc = pts[i].c; });
+        goal = anchorFor(active, key);
+        label.textContent = text;
       }
 
-      function nextWelcome() {
-        word = (word + 1) % WELCOMES.length;
-        fly('welcome' + word);
-        label.textContent = WELCOMES[word][1];
+      function nextStep(seq) {
+        step = (step + 1) % seq.steps.length;
+        fly(...seq.steps[step]);
       }
 
       function setChapter(section) {
         if (section === active) return;
         active = section;
-        const key = section.dataset.formation;
-        if (key === 'welcome') { word = 0; wordAt = performance.now(); fly('welcome0'); } else fly(key);
-        goal = anchorFor(section);
-        label.textContent = key === 'welcome' ? WELCOMES[0][1] : section.dataset.label;
+        const seq = sequences[section.dataset.formation];
+        step = 0; stepAt = performance.now();
+        if (seq) fly(...seq.steps[0]); else fly(section.dataset.formation, section.dataset.label);
         railLinks.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + section.id));
         if (reduceMotion) { anchor = goal; snap(); draw(0); }
       }
@@ -775,7 +829,7 @@
         canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         buildSkyline();
-        if (active) { goal = anchorFor(active); if (reduceMotion) { anchor = goal; snap(); draw(0); } }
+        if (active) { goal = anchorFor(active, currentKey); if (reduceMotion) { anchor = goal; snap(); draw(0); } }
       }
 
       // How far into the final chapter we are: 0 = deep night, 1 = full sunrise
@@ -908,16 +962,18 @@
         const t0 = performance.now();
         (function loop(now) {
           requestAnimationFrame(loop);
-          if (active.dataset.formation === 'welcome' && now - wordAt > 4600) { wordAt = now; nextWelcome(); }
+          const seq = sequences[active.dataset.formation];
+          if (seq && now - stepAt > seq.hold) { stepAt = now; nextStep(seq); }
           draw(now - t0);
         })(t0);
       }
 
       // Wait for Syncopate so the lettered formations use the brand typeface
       if (document.fonts && document.fonts.load) {
-        Promise.race([document.fonts.load('700 100px Syncopate'), new Promise(r => setTimeout(r, 2500))]).then(start, start);
+        const fonts = Promise.race([document.fonts.load('700 100px Syncopate'), new Promise(r => setTimeout(r, 2500))]).catch(() => {});
+        Promise.all([fonts, loadLogo()]).then(start, start);
       } else {
-        start();
+        loadLogo().then(start);
       }
     })();
   </script>
