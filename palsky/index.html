@@ -14,7 +14,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Syncopate:wght@400;700&family=Unbounded:wght@600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Syncopate:wght@400;700&family=Unbounded:wght@600&family=Bricolage+Grotesque:opsz,wght@12..96,800&display=swap" rel="stylesheet" />
 
   <style>
     /* Brand: the night, the sky blue, the horizon orange (sunset / sunrise) and white */
@@ -466,7 +466,7 @@
       const chapters = [...document.querySelectorAll('.chapter')];
 
       const small = window.innerWidth < 700;
-      const COUNT = small ? 320 : 560;
+      const COUNT = small ? 500 : 900;
       const WHITE = [255, 255, 255], SKY = [90, 184, 240], HORIZON = [255, 138, 61], GOLD = [255, 196, 110];
       const mix = (a, b, t) => { t = Math.max(0, Math.min(1, t)); return [0, 1, 2].map(i => a[i] + (b[i] - a[i]) * t); };
       const jitter = s => (Math.random() - 0.5) * s;
@@ -500,12 +500,23 @@
         o.font = `${face.weight} ${size.toFixed(1)}px ${fam}`; spacing(size);
         o.fillText(word, W / 2 + ('letterSpacing' in o ? size * face.track / 2 : 0), H / 2);
         const data = o.getImageData(0, 0, W, H).data;
-        const px = [];
-        for (let y = 0; y < H; y += 3) for (let x = 0; x < W; x += 3) if (data[(y * W + x) * 4 + 3] > 128) px.push([x, y]);
-        if (!px.length) return constellation();
-        return evenly(COUNT, t => {
-          const [x, y] = px[Math.floor(t * px.length)];
-          const p = { x: (x - W / 2) / 450 + jitter(0.006), y: (y - H / 2) / 450 + jitter(0.006), z: jitter(0.03) };
+        const inside = (x, y) => data[((y | 0) * W + (x | 0)) * 4 + 3] > 140;
+        // Like a real show, drones sit on an even (staggered) grid inside the letters: find the spacing that fits the fleet
+        const lattice = step => {
+          const pts = [], rowH = step * 0.866;
+          for (let y = rowH / 2, row = 0; y < H; y += rowH, row++) {
+            for (let x = (row % 2 ? step / 2 : 0) + step / 4; x < W; x += step) if (inside(x, y)) pts.push([x, y]);
+          }
+          return pts;
+        };
+        let lo = 1.5, hi = 40;
+        for (let k = 0; k < 22; k++) { const mid = (lo + hi) / 2; if (lattice(mid).length > COUNT) lo = mid; else hi = mid; }
+        const grid = lattice(hi);
+        if (!grid.length) return constellation();
+        // A few spare drones double up on spread-out grid points (they read as one light)
+        return Array.from({ length: COUNT }, (_, i) => {
+          const [x, y] = i < grid.length ? grid[i] : grid[Math.floor(((i - grid.length) * 0.618034 % 1) * grid.length)];
+          const p = { x: (x - W / 2) / 450, y: (y - H / 2) / 450, z: jitter(0.02) };
           p.c = colour(p);
           return p;
         });
@@ -621,7 +632,7 @@
         const weighted = bright.flatMap(b => Array(b[2]).fill(b));
         return fill([
           [0.42, (t, i) => { const [name, c] = weighted[i % weighted.length]; const a = Math.random() * 6.2832, r = Math.sqrt(Math.random()) * 0.035; return { x: S[name][0] + Math.cos(a) * r, y: S[name][1] + Math.sin(a) * r, z: jitter(0.05), c }; }],
-          [0.58, (t, i) => { const [a, b] = lines[i % lines.length]; const u = (Math.floor(i / lines.length) * 0.618034) % 1; return { x: S[a][0] + (S[b][0] - S[a][0]) * u, y: S[a][1] + (S[b][1] - S[a][1]) * u, z: jitter(0.05), c: mix(SKY, WHITE, 0.4).map(v => v * 0.55) }; }]
+          [0.58, (t, i) => { const [a, b] = lines[i % lines.length]; const u = (Math.floor(i / lines.length) * 0.618034) % 1; return { x: S[a][0] + (S[b][0] - S[a][0]) * u, y: S[a][1] + (S[b][1] - S[a][1]) * u, z: jitter(0.05), c: mix(SKY, WHITE, 0.4).map(v => v * 0.75) }; }]
         ]);
       }
 
@@ -635,7 +646,8 @@
         ['AKWAABA', 'Akwaaba · Twi'], ['KARIBU', 'Karibu · Swahili'], ['BIENVENUE', 'Bienvenue · French'],
         ['BIENVENIDOS', 'Bienvenidos · Spanish'], ['WILLKOMMEN', 'Willkommen · German'], ['WELCOME', 'Welcome · English']
       ];
-      WELCOMES.forEach(([word], i) => { builders['welcome' + i] = () => text(word, p => mix(HORIZON, WHITE, (p.x + 1) / 2)); });
+      // Welcome words in the brand's headline face, Bricolage Grotesque ExtraBold: thick strokes hold enough drones to read clearly
+      WELCOMES.forEach(([word], i) => { builders['welcome' + i] = () => text(word, p => mix(HORIZON, WHITE, (p.x + 1) / 2), { fam: '"Bricolage Grotesque", Syncopate, sans-serif', weight: 800, track: 0.03 }); });
       const cache = {};
       // Every point is checked once, so a bad value can never send a drone off the map
       const clean = pts => pts.map(p => (Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z) ? p : { x: 0, y: 0, z: 0, c: p.c || WHITE }));
@@ -663,7 +675,7 @@
             const [x, y, w2, h2, k] = LOGO_STRIPS[i % LOGO_STRIPS.length];
             const along = ((Math.floor(i / LOGO_STRIPS.length) * 0.618034) % 1);
             const px = w2 > h2 ? x + along * w2 : x + w2 / 2, py = w2 > h2 ? y + h2 / 2 : y + along * h2;
-            return { x: u(px), y: u(py), z: jitter(0.03), c: KENTE[k].map(v => v * 0.6) };
+            return { x: u(px), y: u(py), z: jitter(0.03), c: KENTE[k].map(v => v * 0.72) };
           }]
         ]);
       }
@@ -687,7 +699,7 @@
         if (mobile) {
           if (key === 'logo') return { x: w * 0.5, y: h * 0.25, r: Math.min(w * 0.3, h * 0.17) };
           if (key === 'palsky') return { x: w * 0.5, y: h * 0.27, r: w * 0.43 };
-          if (key === 'welcome') return { x: w * 0.5, y: h * 0.19, r: w * 0.46 };
+          if (key === 'welcome') return { x: w * 0.5, y: h * 0.2, r: w * 0.48 };
           return { x: w * 0.5, y: h * 0.27, r: Math.min(w * 0.4, h * 0.2) };
         }
         if (key === 'palsky') return { x: w * 0.5, y: h * 0.25, r: Math.min(w * 0.3, h * 0.5) };
@@ -893,10 +905,10 @@
           const x = d.x + Math.sin(time * 0.0011 + d.phase) * 0.7 + Math.sin(time * 0.0027 + d.phase2) * 0.3;
           const y = d.y + Math.cos(time * 0.0009 + d.phase2) * 0.7;
           const glow = 0.92 + 0.08 * Math.sin(time * 0.0016 - (tx + ty) * 0.01);
-          const size = Math.max(0.75, 1.6 * persp * (mobile ? 0.92 : 1));
+          const size = Math.max(0.8, 1.75 * persp * (mobile ? 0.85 : 1));
           const r = Math.min(255, d.c[0] * glow) | 0, g = Math.min(255, d.c[1] * glow) | 0, b = Math.min(255, d.c[2] * glow) | 0;
-          ctx.fillStyle = `rgba(${r},${g},${b},0.12)`;
-          ctx.beginPath(); ctx.arc(x, y, size * 4.4, 0, 6.2832); ctx.fill();
+          ctx.fillStyle = `rgba(${r},${g},${b},0.14)`;
+          ctx.beginPath(); ctx.arc(x, y, size * 3.4, 0, 6.2832); ctx.fill();   // a tighter halo keeps neighbouring lights distinct
           ctx.fillStyle = `rgb(${r},${g},${b})`;
           ctx.beginPath(); ctx.arc(x, y, size, 0, 6.2832); ctx.fill();
         }
@@ -942,14 +954,15 @@
         (function loop(now) {
           requestAnimationFrame(loop);
           const seq = sequences[active.dataset.formation];
-          if (seq && now - stepAt > seq.hold) { stepAt = now; nextStep(seq); }
+          // Move on only after the hold time AND once every drone has arrived and the shape has been seen for a moment
+          if (seq && now - stepAt > seq.hold && clock > arriveBy + 2500) { stepAt = now; nextStep(seq); }
           draw(now - t0);
         })(t0);
       }
 
       // Wait for the typefaces so the lettered formations use the right letter shapes
       if (document.fonts && document.fonts.load) {
-        const faces = Promise.all([document.fonts.load('700 100px Syncopate'), document.fonts.load('600 100px Unbounded')]);
+        const faces = Promise.all([document.fonts.load('700 100px Syncopate'), document.fonts.load('600 100px Unbounded'), document.fonts.load('800 100px "Bricolage Grotesque"')]);
         Promise.race([faces, new Promise(r => setTimeout(r, 2500))]).then(start, start);
       } else {
         start();
