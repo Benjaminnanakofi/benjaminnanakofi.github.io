@@ -238,8 +238,7 @@
   </style>
 </head>
 <body class="no-js">
-  <!-- data-logo: path to the PALSKY logo mark (transparent PNG or SVG). When set, the opening scene alternates logo and wordmark. -->
-  <canvas id="sky" aria-hidden="true" data-logo=""></canvas>
+  <canvas id="sky" aria-hidden="true"></canvas>
 
   <header class="bar">
     <a href="#hero" class="brand" aria-label="PALSKY home">PALSKY<i>.</i></a>
@@ -611,52 +610,32 @@
       // Chapters whose formation changes on its own: [formation, label] steps and how long each holds
       const sequences = { welcome: { hold: 4600, steps: WELCOMES.map(([, l], i) => ['welcome' + i, l]) } };
 
-      // The logo mark: drones sample the logo image's solid pixels, like the lettered formations do
-      function logoFormation(img) {
-        const S = 600;
-        const off = document.createElement('canvas');
-        off.width = S; off.height = S;
-        const o = off.getContext('2d');
-        const k = Math.min((S * 0.92) / img.width, (S * 0.92) / img.height);
-        const ox = Math.ceil((S - img.width * k) / 2), oy = Math.ceil((S - img.height * k) / 2);
-        o.drawImage(img, (S - img.width * k) / 2, (S - img.height * k) / 2, img.width * k, img.height * k);
-        const data = o.getImageData(0, 0, S, S).data;
-        const lum = i => 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-        // A logo on a solid background: the mark is whatever differs from the image's own corner colour
-        const corner = ((oy + 1) * S + ox + 1) * 4;
-        const bgSolid = data[corner + 3] > 200, bgLum = lum(corner);
-        const px = [];
-        for (let y = 0; y < S; y += 3) for (let x = 0; x < S; x += 3) {
-          const i = (y * S + x) * 4;
-          if (data[i + 3] < 128 || (bgSolid && Math.abs(lum(i) - bgLum) < 60)) continue;
-          px.push([x, y, i]);
-        }
-        if (px.length < 60) return null;
-        return evenly(COUNT, t => {
-          const [x, y, i] = px[Math.floor(t * px.length)];
-          // Keep the logo's own colours where they glow; dark ink becomes white-gold light
-          const c = lum(i) > 110 ? mix([data[i], data[i + 1], data[i + 2]], WHITE, 0.15) : mix(WHITE, GOLD, (y / S) * 0.8);
-          return { x: (x - S / 2) / (S * 0.46) + jitter(0.006), y: (y - S / 2) / (S * 0.46) + jitter(0.006), z: jitter(0.03), c };
-        });
+      // The PALSKY logo mark, from the brand identity: drone lights draw a P (for People) over a kente weave.
+      // Coordinates are the mark's own 300 x 300 grid; strips are [x, y, w, h, colour] in Ghana's kente green, gold and red.
+      const LOGO_DOTS = [[83.3,50],[116.7,50],[150,50],[183.3,50],[83.3,83.3],[216.7,83.3],[83.3,116.7],[216.7,116.7],[83.3,150],[116.7,150],[150,150],[183.3,150],[83.3,183.3],[83.3,216.7],[83.3,250]];
+      const LOGO_STRIPS = [[6.7,13.7,20,6,0],[47,6.7,6,20,1],[73.3,13.7,20,6,2],[113.7,6.7,6,20,1],[140,13.7,20,6,0],[180.3,6.7,6,20,1],[206.7,13.7,20,6,2],[247,6.7,6,20,1],[273.3,13.7,20,6,0],[13.7,40,6,20,1],[40,47,20,6,2],[213.7,40,6,20,1],[240,47,20,6,0],[280.3,40,6,20,0],[6.7,80.3,20,6,2],[47,73.3,6,20,1],[113.7,73.3,6,20,1],[140,80.3,20,6,0],[180.3,73.3,6,20,0],[247,73.3,6,20,0],[273.3,80.3,20,6,1],[13.7,106.7,6,20,2],[40,113.7,20,6,1],[106.7,113.7,20,6,2],[147,106.7,6,20,1],[173.3,113.7,20,6,0],[240,113.7,20,6,0],[280.3,106.7,6,20,1],[6.7,147,20,6,0],[47,140,6,20,0],[206.7,147,20,6,1],[247,140,6,20,2],[273.3,147,20,6,1],[13.7,173.3,6,20,1],[40,180.3,20,6,2],[106.7,180.3,20,6,0],[147,173.3,6,20,0],[173.3,180.3,20,6,1],[213.7,173.3,6,20,1],[240,180.3,20,6,0],[280.3,173.3,6,20,0],[6.7,213.7,20,6,2],[47,206.7,6,20,1],[113.7,206.7,6,20,2],[140,213.7,20,6,1],[180.3,206.7,6,20,0],[206.7,213.7,20,6,1],[247,206.7,6,20,0],[273.3,213.7,20,6,1],[13.7,240,6,20,1],[40,247,20,6,0],[106.7,247,20,6,0],[147,240,6,20,0],[173.3,247,20,6,1],[213.7,240,6,20,0],[240,247,20,6,1],[280.3,240,6,20,2],[6.7,280.3,20,6,0],[47,273.3,6,20,0],[73.3,280.3,20,6,1],[113.7,273.3,6,20,1],[140,280.3,20,6,2],[180.3,273.3,6,20,1],[206.7,280.3,20,6,1],[247,273.3,6,20,2],[273.3,280.3,20,6,1]];
+      const KENTE = [[0, 150, 90], [252, 209, 22], [230, 40, 60]];
+      function logo() {
+        const u = v => (v - 150) / 150;
+        return fill([
+          // Each light of the P is a tight cluster of drones, so it reads as one bright point
+          [0.45, (t, i) => {
+            const [x, y] = LOGO_DOTS[i % LOGO_DOTS.length];
+            const a = Math.random() * 6.2832, r = Math.sqrt(Math.random()) * 7;
+            return { x: u(x + Math.cos(a) * r), y: u(y + Math.sin(a) * r), z: jitter(0.03), c: WHITE };
+          }],
+          // The weave behind it: drones spaced along each strip, dimmer so the P stays in front
+          [0.55, (t, i) => {
+            const [x, y, w2, h2, k] = LOGO_STRIPS[i % LOGO_STRIPS.length];
+            const along = ((Math.floor(i / LOGO_STRIPS.length) * 0.618034) % 1);
+            const px = w2 > h2 ? x + along * w2 : x + w2 / 2, py = w2 > h2 ? y + h2 / 2 : y + along * h2;
+            return { x: u(px), y: u(py), z: jitter(0.03), c: KENTE[k].map(v => v * 0.6) };
+          }]
+        ]);
       }
-
-      function loadLogo() {
-        const src = canvas.dataset.logo;
-        if (!src) return Promise.resolve();
-        return new Promise(done => {
-          const img = new Image();
-          img.onload = () => {
-            const pts = logoFormation(img);
-            if (pts) {
-              cache.logo = pts;
-              sequences.palsky = { hold: 5200, steps: [['palsky', 'PALSKY'], ['logo', 'PALSKY logo mark']] };
-            }
-            done();
-          };
-          img.onerror = () => done();
-          img.src = src;
-        });
-      }
+      builders.logo = logo;
+      // The opening scene alternates the wordmark and the logo mark
+      sequences.palsky = { hold: 5200, steps: [['palsky', 'PALSKY'], ['logo', 'PALSKY logo mark']] };
 
       // ----- Where the formation sits on screen for each chapter -----
       function anchorFor(section, current) {
@@ -970,10 +949,9 @@
 
       // Wait for Syncopate so the lettered formations use the brand typeface
       if (document.fonts && document.fonts.load) {
-        const fonts = Promise.race([document.fonts.load('700 100px Syncopate'), new Promise(r => setTimeout(r, 2500))]).catch(() => {});
-        Promise.all([fonts, loadLogo()]).then(start, start);
+        Promise.race([document.fonts.load('700 100px Syncopate'), new Promise(r => setTimeout(r, 2500))]).then(start, start);
       } else {
-        loadLogo().then(start);
+        start();
       }
     })();
   </script>
