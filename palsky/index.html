@@ -642,7 +642,7 @@
       const formation = key => cache[key] || (cache[key] = clean(builders[key]()));
 
       // Chapters whose formation changes on its own: [formation, label] steps and how long each holds
-      const sequences = { welcome: { hold: 4600, steps: WELCOMES.map(([, l], i) => ['welcome' + i, l]) } };
+      const sequences = { welcome: { hold: 7000, steps: WELCOMES.map(([, l], i) => ['welcome' + i, l]) } };
 
       // The PALSKY logo mark, from the brand identity: drone lights draw a P (for People) over a kente weave.
       // Coordinates are the mark's own 300 x 300 grid; strips are [x, y, w, h, colour] in Ghana's kente green, gold and red.
@@ -669,7 +669,7 @@
       }
       builders.logo = logo;
       // The opening scene alternates the wordmark and the logo mark
-      sequences.palsky = { hold: 5200, steps: [['palsky', 'PALSKY'], ['logo', 'PALSKY logo mark']] };
+      sequences.palsky = { hold: 7600, steps: [['palsky', 'PALSKY'], ['logo', 'PALSKY logo mark']] };
 
       // ----- Where the formation sits on screen for each chapter -----
       // The closing sun fits itself into the free sky between the contact links and the footer
@@ -754,17 +754,18 @@
       }
 
       // ----- Drones -----
-      // Each drone flies on spring-and-damper physics: it accelerates hard, swoops on a curved path, overshoots a little and settles,
-      // then hovers with the small drift of a real drone holding position.
-      let drones = [], active = null, anchor = { x: 0, y: 0, r: 1 }, goal = anchor, clock = 0;
+      // Flown the way a real show is: every drone travels on a timed, near-straight path, easing out of its spot and into the
+      // next, and the whole fleet arrives together. Take-off is a slow vertical climb. Lights stay steady; colours fade in flight.
+      const FLIGHT = 3600, LIFTOFF = 5600;   // ms
+      let drones = [], active = null, anchor = { x: 0, y: 0, r: 1 }, goal = anchor, clock = 0, arriveBy = 0;
+      const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);   // smooth start, smooth stop
+
       function launch() {
         drones = Array.from({ length: COUNT }, () => ({
-          x: w * (0.05 + Math.random() * 0.9), y: h + 20 + Math.random() * 120, z: 0,
-          vx: 0, vy: 0,
-          k: 0.011 + Math.random() * 0.009,
-          curl: 0, departAt: 200 + Math.random() * 1800,
+          x: 0, y: 0, z: 0, sx: 0, sy: 0, sz: 0,
+          t0: 0, dur: LIFTOFF, bow: 0, lift: true,
           phase: Math.random() * 6.28, phase2: Math.random() * 6.28,
-          c: [255, 255, 255], t: null, tc: WHITE
+          c: [255, 255, 255], sc: [255, 255, 255], t: null, tc: WHITE
         }));
       }
 
@@ -773,13 +774,25 @@
         currentKey = key;
         const pts = formation(key);
         lowest = pts.reduce((m, p) => Math.max(m, p.y), -1);
+        goal = anchorFor(active, key);
         drones.forEach((d, i) => {
           d.t = pts[i]; d.tc = pts[i].c;
-          // Leave in quick waves, each drone curving left or right on its way
-          d.departAt = Math.max(d.departAt, clock) + Math.random() * 450;
-          d.curl = (Math.random() < 0.5 ? -1 : 1) * (0.35 + Math.random() * 0.75);
+          if (d.lift && !d.t0) {
+            // First flight: start on the ground below the screen, right under the drone's place in the formation
+            const tx = goal.x + d.t.x * goal.r;
+            d.sx = tx + jitter(goal.r * 0.25); d.sy = h + 30 + Math.random() * 60; d.sz = 0;
+            d.t0 = clock + 250 + Math.random() * 1400;   // lift off in loose waves
+            d.dur = LIFTOFF + Math.random() * 600;
+          } else {
+            d.sx = d.x; d.sy = d.y; d.sz = d.z;
+            d.t0 = clock + Math.random() * 220;            // all leave within a moment of each other
+            d.dur = FLIGHT + Math.random() * 400;
+          }
+          d.sc = d.c.slice();
+          d.bow = (Math.random() - 0.5) * 0.16;          // a slight bend, so paths don't cut through each other
+          d.lift = false;
         });
-        goal = anchorFor(active, key);
+        arriveBy = Math.max(...drones.map(d => d.t0 + d.dur));
         label.textContent = text;
       }
 
@@ -826,7 +839,8 @@
       }
 
       function snap() {
-        drones.forEach(d => { const [x, y, z] = screenTarget(d, 0); d.x = x; d.y = y; d.z = z; d.vx = d.vy = 0; d.c = d.tc.slice(); d.departAt = 0; });
+        drones.forEach(d => { const [x, y, z] = screenTarget(d, 0); d.x = d.sx = x; d.y = d.sy = y; d.z = d.sz = z; d.c = d.tc.slice(); d.sc = d.tc.slice(); d.t0 = 0; d.dur = 1; d.lift = false; });
+        arriveBy = 0;
       }
 
       function drawSky(time) {
@@ -856,47 +870,31 @@
 
       function drawDrones(time, dt) {
         anchor = {
-          x: anchor.x + (goal.x - anchor.x) * 0.08,
-          y: anchor.y + (goal.y - anchor.y) * 0.08,
-          r: anchor.r + (goal.r - anchor.r) * 0.08
+          x: anchor.x + (goal.x - anchor.x) * 0.035,
+          y: anchor.y + (goal.y - anchor.y) * 0.035,
+          r: anchor.r + (goal.r - anchor.r) * 0.035
         };
-        const spin = currentKey === 'orion' ? Math.sin(time * 0.0002) * 0.25 : 0;
-        const sway = Math.sin(time * 0.00035) * 0.24 + spin;
-        const f = Math.min(3, dt / 16.7);
-        const vmax = Math.max(9, Math.min(w, h) * 0.028);   // top speed, px per frame
+        // A slow, gentle turn so 3D shapes show their depth; flat shapes barely move
+        const sway = Math.sin(time * 0.00018) * 0.12 + (currentKey === 'orion' ? Math.sin(time * 0.0001) * 0.12 : 0);
         ctx.globalCompositeOperation = 'lighter';
         for (const d of drones) {
           if (!d.t) continue;
           const [tx, ty, tz, persp] = screenTarget(d, sway);
-          if (time > d.departAt) {
-            const dx = tx - d.x, dy = ty - d.y, dist = Math.hypot(dx, dy);
-            const damp = 2 * Math.sqrt(d.k) * 0.72;          // under-damped: a small, lively overshoot
-            let ax = d.k * dx - damp * d.vx, ay = d.k * dy - damp * d.vy;
-            if (dist > 6) {                                   // swoop: push sideways while far from the spot
-              const side = d.curl * d.k * Math.min(dist, 260) * 0.55;
-              ax += (-dy / dist) * side; ay += (dx / dist) * side;
-            }
-            d.vx += ax * f; d.vy += ay * f;
-            const sp = Math.hypot(d.vx, d.vy);
-            if (sp > vmax) { d.vx *= vmax / sp; d.vy *= vmax / sp; }
-            d.x += d.vx * f; d.y += d.vy * f;
-            d.z += (tz - d.z) * 0.06 * f;
-          }
-          for (let c = 0; c < 3; c++) d.c[c] += (d.tc[c] - d.c[c]) * 0.06 * f;
+          const p = Math.max(0, Math.min(1, (time - d.t0) / d.dur));
+          const e = ease(p);
+          // Straight line from where the drone was to where it is going, bent slightly sideways mid-flight
+          const dx = tx - d.sx, dy = ty - d.sy, bend = Math.sin(Math.PI * e) * d.bow;
+          d.x = d.sx + dx * e - dy * bend;
+          d.y = d.sy + dy * e + dx * bend;
+          d.z = d.sz + (tz - d.sz) * e;
+          for (let c = 0; c < 3; c++) d.c[c] = d.sc[c] + (d.tc[c] - d.sc[c]) * e;
+          if (p < 0.001 && d.sy > h) continue;   // still on the ground, out of sight
           // Holding position: the faint wander of a real drone in the air
-          const x = d.x + Math.sin(time * 0.0013 + d.phase) * 0.9 + Math.sin(time * 0.0031 + d.phase2) * 0.4;
-          const y = d.y + Math.cos(time * 0.0011 + d.phase2) * 0.9;
-          const speed = Math.hypot(d.vx, d.vy);
-          // A soft wave of brightness rolls across a formation while it holds
-          const glow = 0.82 + 0.18 * Math.sin(time * 0.0025 - (tx + ty) * 0.012);
+          const x = d.x + Math.sin(time * 0.0011 + d.phase) * 0.7 + Math.sin(time * 0.0027 + d.phase2) * 0.3;
+          const y = d.y + Math.cos(time * 0.0009 + d.phase2) * 0.7;
+          const glow = 0.92 + 0.08 * Math.sin(time * 0.0016 - (tx + ty) * 0.01);
           const size = Math.max(0.75, 1.6 * persp * (mobile ? 0.92 : 1));
           const r = Math.min(255, d.c[0] * glow) | 0, g = Math.min(255, d.c[1] * glow) | 0, b = Math.min(255, d.c[2] * glow) | 0;
-          // Light streak behind a drone in flight
-          if (speed > 1.5) {
-            ctx.strokeStyle = `rgba(${r},${g},${b},${Math.min(0.6, speed / 18).toFixed(3)})`;
-            ctx.lineWidth = size * 0.9;
-            ctx.beginPath(); ctx.moveTo(x - d.vx * 3.2, y - d.vy * 3.2); ctx.lineTo(x, y); ctx.stroke();
-          }
           ctx.fillStyle = `rgba(${r},${g},${b},0.12)`;
           ctx.beginPath(); ctx.arc(x, y, size * 4.4, 0, 6.2832); ctx.fill();
           ctx.fillStyle = `rgb(${r},${g},${b})`;
@@ -908,7 +906,7 @@
       // The caption sits just under the formation, on the side of the screen that has no text
       function placeCaption() {
         // Hidden while the formation glides between chapters, so it never sweeps across the story text
-        const settled = Math.abs(goal.x - anchor.x) < 12 && Math.abs(goal.y - anchor.y) < 12;
+        const settled = clock > arriveBy && Math.abs(goal.x - anchor.x) < 12 && Math.abs(goal.y - anchor.y) < 12;
         const show = !mobile && settled && active && active.dataset.side !== 'center';
         caption.classList.toggle('on', !!show);
         if (show) caption.style.transform = `translate(${anchor.x.toFixed(1)}px, ${(anchor.y + lowest * anchor.r + 34).toFixed(1)}px) translateX(-50%)`;
