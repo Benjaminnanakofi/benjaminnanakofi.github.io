@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- Security: GitHub Pages can't send security headers (it ignores _headers and netlify.toml), so the policy lives here.
+       Only this site, Google Fonts and Cloudflare Web Analytics may load code, styles or fonts. Keep in step with _headers and netlify.toml. -->
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; form-action 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>PALSKY — Culture, told in light</title>
   <meta name="description" content="PALSKY designs drone light shows that tell the story of a culture — of people, organizations and industries — across the night sky, anywhere in the world. Born in Accra, Ghana." />
   <meta property="og:title" content="PALSKY — Culture, told in light" />
@@ -33,6 +37,9 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Shown instead of the page when another website puts it inside a frame (clickjacking guard) */
+    html.framed body > * { visibility: hidden !important; }
+    html.framed body > .framed-note { visibility: visible !important; position: fixed; inset: 0; display: grid; place-items: center; padding: 2rem; text-align: center; font: 600 1rem/1.5 sans-serif; color: #fff; background: #03040c; z-index: 2147483647; }
     html { scroll-behavior: smooth; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -242,6 +249,31 @@
       .contact .btn { width: 100%; }
     }
 
+    /* Phones held sideways (short, wide screens): side by side like the desktop, story in one half, drones in the other */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .bar { padding: 0.6rem 1rem; }
+      .rail, .live { display: none !important; }
+      .chapter, .hero, .dawn { min-height: 100vh; min-height: 100svh; align-items: center; padding: 4.5rem 0 2rem; }
+      .chapter .copy, .chapter[data-side="right"] .copy { max-width: 50%; margin: 0; padding: 0; background: none; border-radius: 0; text-align: left; }
+      .chapter[data-side="right"] .copy { margin-left: auto; }
+      /* The centred chapters split too: the opening's story on the right, the closing's on the left */
+      .chapter.hero[data-side="center"] .copy { max-width: 52%; margin: 0 0 0 auto; background: none !important; padding: 0 !important; text-align: left; }
+      .chapter.dawn[data-side="center"] .copy { max-width: 56%; margin: 0; text-align: left; }
+      .hero .kicker { display: none; }
+      .hero h1 { font-size: 1.9rem; margin-bottom: 0.6rem; }
+      .hero p.lead { font-size: 0.92rem; margin: 0 0 1rem; }
+      h2 { font-size: 2rem; margin-bottom: 0.8rem; }
+      .copy p { font-size: 0.92rem; }
+      .actions, .tags, .contact, .socials { justify-content: flex-start; }
+      .chapter[data-side="center"] .num::after { display: none; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      .why { grid-template-columns: 1fr 1fr; }
+      .dawn { flex-direction: column; justify-content: center; align-items: stretch; padding-bottom: 1rem; }
+      .dawn h2 { font-size: 2rem; }
+      .contact .addr { text-align: left; }
+      footer.end { position: static; margin-top: 1rem; padding: 0.5rem 1rem; flex-direction: row; justify-content: space-between; text-align: left; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -436,6 +468,17 @@
   </main>
 
   <script>
+    // Don't run inside another site's frame (stops clickjacking; GitHub Pages can't send X-Frame-Options)
+    if (window.top !== window.self) {
+      // Browsers stop a framed page from redirecting the outer window, so hide everything and offer a way out instead
+      document.documentElement.classList.add('framed');
+      document.addEventListener('DOMContentLoaded', function () {
+        var a = document.createElement('a');
+        a.href = window.location.href; a.target = '_top'; a.rel = 'noopener'; a.className = 'framed-note';
+        a.textContent = 'This page is shown inside another website. Open it on its own \u2197';
+        document.body.appendChild(a);
+      });
+    }
     document.body.classList.remove('no-js');
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     document.getElementById('year').textContent = new Date().getFullYear();
@@ -471,7 +514,7 @@
       const mix = (a, b, t) => { t = Math.max(0, Math.min(1, t)); return [0, 1, 2].map(i => a[i] + (b[i] - a[i]) * t); };
       const jitter = s => (Math.random() - 0.5) * s;
 
-      let w = 0, h = 0, dpr = 1, mobile = false;
+      let w = 0, h = 0, dpr = 1, mobile = false, short = false;
 
       // ----- Formations: COUNT points in a unit box (y points down), each with a colour -----
       const evenly = (n, fn) => Array.from({ length: n }, (_, i) => fn(i / n, i));
@@ -687,6 +730,7 @@
       // The closing sun fits itself into the free sky between the contact links and the footer
       const dawnCopy = document.querySelector('#dawn .copy'), dawnFooter = document.querySelector('#dawn footer.end');
       function sunAnchor() {
+        if (short) return { x: w * 0.78, y: h * 0.56, r: Math.min(w * 0.13, h * 0.3) };
         const top = Math.max(dawnCopy.getBoundingClientRect().bottom, mobile ? dawnFooter.getBoundingClientRect().bottom : 0, h * 0.3) + 18;
         const bottom = (mobile ? h : Math.min(h, dawnFooter.getBoundingClientRect().top)) - 14;
         const r = Math.max(36, Math.min((bottom - top) / 2.1, w * 0.16, h * 0.17));
@@ -696,6 +740,11 @@
       function anchorFor(section, current) {
         const key = current.startsWith('welcome') ? 'welcome' : current, side = section.dataset.side;
         if (key === 'sunrise') return sunAnchor();
+        if (short) {
+          // Story on one side, drones in the other half; the opening's text sits on the right
+          const r = key === 'palsky' || key === 'welcome' ? Math.min(w * 0.2, h * 0.55) : key === 'logo' ? Math.min(w * 0.13, h * 0.3) : Math.min(w * 0.17, h * 0.34);
+          return { x: side === 'left' ? w * 0.75 : w * 0.24, y: h * 0.56, r };
+        }
         if (mobile) {
           if (key === 'logo') return { x: w * 0.5, y: h * 0.25, r: Math.min(w * 0.3, h * 0.17) };
           if (key === 'palsky') return { x: w * 0.5, y: h * 0.27, r: w * 0.43 };
@@ -836,7 +885,8 @@
         if (field && nw === w && Math.abs(nh - h) < 120) return;
         dpr = Math.min(window.devicePixelRatio || 1, 2);
         w = nw; h = nh;
-        mobile = w < 900;
+        short = h < 500 && w > h;          // a phone held sideways: side-by-side layout
+        mobile = w < 900 && !short;
         canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         buildField();
@@ -919,7 +969,7 @@
       function placeCaption() {
         // Hidden while the formation glides between chapters, so it never sweeps across the story text
         const settled = clock > arriveBy && Math.abs(goal.x - anchor.x) < 12 && Math.abs(goal.y - anchor.y) < 12;
-        const show = !mobile && settled && active && active.dataset.side !== 'center';
+        const show = !mobile && !short && settled && active && active.dataset.side !== 'center';
         caption.classList.toggle('on', !!show);
         if (show) caption.style.transform = `translate(${anchor.x.toFixed(1)}px, ${(anchor.y + lowest * anchor.r + 34).toFixed(1)}px) translateX(-50%)`;
       }
