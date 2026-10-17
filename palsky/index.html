@@ -74,8 +74,6 @@
     /* The full logomark (P of drone lights over kente), with a soft edge so the black tile stands out on the night sky */
     .brand .mark { width: 38px; height: 38px; flex-shrink: 0; border-radius: 9px; box-shadow: 0 0 0 1px rgba(246, 241, 231, 0.28), 0 0 18px rgba(252, 209, 22, 0.18); }
     .bar-actions { display: flex; align-items: center; gap: 1.25rem; }
-    .bar-link { font-size: 0.85rem; color: var(--muted); transition: color 0.2s; }
-    .bar-link:hover { color: var(--white); }
 
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
@@ -210,7 +208,7 @@
     footer.end {
       position: absolute; left: 0; right: 0; bottom: 0;
       padding: 1.3rem 2rem;
-      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+      display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem; text-align: center;
       font-size: 0.8rem; color: rgba(255, 255, 255, 0.82);
     }
     footer.end a { border-bottom: 1px solid rgba(255, 255, 255, 0.4); }
@@ -224,7 +222,6 @@
     /* ===== Responsive ===== */
     @media (max-width: 900px) {
       .bar { padding: 0.9rem 1rem; }
-      .bar-link { display: none; }
       .wrap { padding: 0 1rem; }
       /* Phones: the formation flies in the top half, the story sits below it */
       .chapter { align-items: flex-end; min-height: 125vh; min-height: 125svh; padding: 52vh 0 4rem; }
@@ -273,7 +270,7 @@
       .dawn { flex-direction: column; justify-content: center; align-items: stretch; padding-bottom: 1rem; }
       .dawn h2 { font-size: 2rem; }
       .contact .addr { text-align: left; }
-      footer.end { position: static; margin-top: 1rem; padding: 0.5rem 1rem; flex-direction: row; justify-content: space-between; text-align: left; }
+      footer.end { position: static; margin-top: 1rem; padding: 0.5rem 1rem; flex-direction: row; justify-content: center; text-align: center; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -289,7 +286,6 @@
   <header class="bar">
     <a href="#hero" class="brand" aria-label="PALSKY home"><svg class="mark" viewBox="0 0 300 300" role="img" aria-label="PALSKY logomark"><rect width="300" height="300" rx="48" fill="#0A0A0A"/><rect x="6.7" y="13.7" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="47" y="6.7" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="73.3" y="13.7" width="20" height="6" fill="#CE1126" fill-opacity=".6"/><rect x="113.7" y="6.7" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="140" y="13.7" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="180.3" y="6.7" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="206.7" y="13.7" width="20" height="6" fill="#CE1126" fill-opacity=".6"/><rect x="247" y="6.7" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="273.3" y="13.7" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="13.7" y="40" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="40" y="47" width="20" height="6" fill="#CE1126" fill-opacity=".6"/><rect x="213.7" y="40" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="240" y="47" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="280.3" y="40" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="6.7" y="80.3" width="20" height="6" fill="#CE1126" fill-opacity=".6"/><rect x="47" y="73.3" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="113.7" y="73.3" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="140" y="80.3" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="180.3" y="73.3" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="247" y="73.3" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="273.3" y="80.3" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="13.7" y="106.7" width="6" height="20" fill="#CE1126" fill-opacity=".6"/><rect x="40" y="113.7" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="106.7" y="113.7" width="20" height="6" fill="#CE1126" fill-opacity=".6"/><rect x="147" y="106.7" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="173.3" y="113.7" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="240" y="113.7" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="280.3" y="106.7" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="6.7" y="147" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="47" y="140" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="206.7" y="147" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="247" y="140" width="6" height="20" fill="#CE1126" fill-opacity=".6"/><rect x="273.3" y="147" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="13.7" y="173.3" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="40" y="180.3" width="20" height="6" fill="#CE1126" fill-opacity=".6"/><rect x="106.7" y="180.3" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="147" y="173.3" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="173.3" y="180.3" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="213.7" y="173.3" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="240" y="180.3" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="280.3" y="173.3" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="6.7" y="213.7" width="20" height="6" fill="#CE1126" fill-opacity=".6"/><rect x="47" y="206.7" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="113.7" y="206.7" width="6" height="20" fill="#CE1126" fill-opacity=".6"/><rect x="140" y="213.7" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="180.3" y="206.7" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="206.7" y="213.7" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="247" y="206.7" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="273.3" y="213.7" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="13.7" y="240" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="40" y="247" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="106.7" y="247" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="147" y="240" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="173.3" y="247" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="213.7" y="240" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="240" y="247" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="280.3" y="240" width="6" height="20" fill="#CE1126" fill-opacity=".6"/><rect x="6.7" y="280.3" width="20" height="6" fill="#006B3F" fill-opacity=".6"/><rect x="47" y="273.3" width="6" height="20" fill="#006B3F" fill-opacity=".6"/><rect x="73.3" y="280.3" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="113.7" y="273.3" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="140" y="280.3" width="20" height="6" fill="#CE1126" fill-opacity=".6"/><rect x="180.3" y="273.3" width="6" height="20" fill="#FCD116" fill-opacity=".6"/><rect x="206.7" y="280.3" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><rect x="247" y="273.3" width="6" height="20" fill="#CE1126" fill-opacity=".6"/><rect x="273.3" y="280.3" width="20" height="6" fill="#FCD116" fill-opacity=".6"/><circle cx="83.3" cy="50" r="13" fill="#FFFFFF"/><circle cx="116.7" cy="50" r="13" fill="#FFFFFF"/><circle cx="150" cy="50" r="13" fill="#FFFFFF"/><circle cx="183.3" cy="50" r="13" fill="#FFFFFF"/><circle cx="83.3" cy="83.3" r="13" fill="#FFFFFF"/><circle cx="216.7" cy="83.3" r="13" fill="#FFFFFF"/><circle cx="83.3" cy="116.7" r="13" fill="#FFFFFF"/><circle cx="216.7" cy="116.7" r="13" fill="#FFFFFF"/><circle cx="83.3" cy="150" r="13" fill="#FFFFFF"/><circle cx="116.7" cy="150" r="13" fill="#FFFFFF"/><circle cx="150" cy="150" r="13" fill="#FFFFFF"/><circle cx="183.3" cy="150" r="13" fill="#FFFFFF"/><circle cx="83.3" cy="183.3" r="13" fill="#FFFFFF"/><circle cx="83.3" cy="216.7" r="13" fill="#FFFFFF"/><circle cx="83.3" cy="250" r="13" fill="#FFFFFF"/></svg>palsky</a>
     <div class="bar-actions">
-      <a class="bar-link" href="../">By Benjamin Nana Kofi</a>
       <a class="btn btn-sun btn-sm" href="#dawn">Tell your story</a>
     </div>
   </header>
@@ -464,7 +460,6 @@
       </div>
       <footer class="end">
         <span>© <span id="year">2026</span> PALSKY · Born in Accra · Telling the world’s stories in light</span>
-        <span>A project by <a href="../">Benjamin Nana Kofi</a></span>
       </footer>
     </section>
   </main>
