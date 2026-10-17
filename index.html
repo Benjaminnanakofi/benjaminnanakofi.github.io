@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Security: GitHub Pages can't send security headers (it ignores _headers and netlify.toml), so the policy lives here.
+       Only this site, Google Fonts, cdnjs (GSAP / Three.js, pinned with SRI) and Cloudflare Web Analytics may load code, styles or fonts. Keep in step with _headers and netlify.toml. -->
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://static.cloudflareinsights.com; default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; form-action 'self'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Benjamin Nana Kofi — Designer, Developer & Data Enthusiast</title>
   <meta name="description" content="Benjamin Nana Kofi designs, codes and analyzes — building intuitive, data-driven digital products." />
   <meta property="og:title" content="Benjamin Nana Kofi — Designer, Developer & Data Enthusiast" />
@@ -15,6 +19,17 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=Syncopate:wght@700&family=Unbounded:wght@600&display=swap" rel="stylesheet" />
 
   <script>
+    // Don't run inside another site's frame (stops clickjacking; GitHub Pages can't send X-Frame-Options)
+    if (window.top !== window.self) {
+      // Browsers stop a framed page from redirecting the outer window, so hide everything and offer a way out instead
+      document.documentElement.classList.add('framed');
+      document.addEventListener('DOMContentLoaded', function () {
+        var a = document.createElement('a');
+        a.href = window.location.href; a.target = '_top'; a.rel = 'noopener'; a.className = 'framed-note';
+        a.textContent = 'This page is shown inside another website. Open it on its own \u2197';
+        document.body.appendChild(a);
+      });
+    }
     // Apply saved theme before paint to avoid a light/dark flash
     (function () {
       var theme;
@@ -65,6 +80,9 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Shown instead of the page when another website puts it inside a frame (clickjacking guard) */
+    html.framed body > * { visibility: hidden !important; }
+    html.framed body > .framed-note { visibility: visible !important; position: fixed; inset: 0; display: grid; place-items: center; padding: 2rem; text-align: center; font: 600 1rem/1.5 sans-serif; color: #fff; background: #03040c; z-index: 2147483647; }
 
 
     body {
@@ -991,7 +1009,7 @@
           <div class="dev-bar"><i></i></div>
         </div>
         <div class="spotlight-actions">
-          <a href="palsky/" class="btn btn-primary">✨ Enter the PALSKY story</a>
+          <a href="https://palskystudios.github.io/" class="btn btn-primary">✨ Enter the PALSKY story</a>
           <a href="mailto:palskystudios@gmail.com?subject=Notify%20me%20when%20PALSKY%20launches" class="btn btn-ghost"
              data-mail-to="palskystudios@gmail.com"
              data-mail-title="Get notified about PALSKY 🔔"

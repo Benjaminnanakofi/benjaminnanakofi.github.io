@@ -19,3 +19,6 @@
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
     # Always use HTTPS for a year
     Strict-Transport-Security = "max-age=31536000"
+    # Keep other sites' windows from reaching into this one
+    Cross-Origin-Opener-Policy = "same-origin"
+    X-Permitted-Cross-Domain-Policies = "none"
